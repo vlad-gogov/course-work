@@ -31,16 +31,14 @@ void Model::countRequests(double part_time) {
 	p *= exp(lambda * part_time);
 	if (abs(1 - p) <= std::numeric_limits<double>::epsilon() * eps)
 		return;
-	int i = 1;
-	double F = 1;
-	double l = lambda * part_time;
+	double l = 1;
+	double F = l;
 	while (F <= p) {
-		i++;
-		l *= lambda * part_time / i;
+		count_requests++;
+		l *= lambda * part_time / count_requests;
 		if (l <= std::numeric_limits<double>::epsilon() * eps)
 			return;
 		F += l;
-		count_requests++;
 	}
 }
 
@@ -52,8 +50,9 @@ void Model::createModel() {
 	double current_time = time;
 	while (true) {
 		countRequests(current_time);
+		std::cout << ". Delta requests = " << count_requests << ". ";
 		prev_count_requests += count_requests;
-		std::cout << ". Count requests = " << prev_count_requests << ". Time = " << time << ". ";
+		std::cout << "Count requests = " << prev_count_requests << ". Time = " << time << ". ";
 		std::cout << "|" << prev_count_requests / time << " - " << lambda << "| < " << 0.1 * lambda << std::endl;
 		if (isCorrect())
 			break;
