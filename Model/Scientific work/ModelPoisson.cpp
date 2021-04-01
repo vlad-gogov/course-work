@@ -1,59 +1,61 @@
-#include <random>
-#include "Model.h"
+#include "ModelPoisson.h"
 
-Model::Model() {
+ModelPoisson::ModelPoisson() {
 	lambda = 0;
 	time = 0;
 	count_requests = 0;
 	prev_count_requests = 0;
-	eps = 1.0e14;
+	lambda_stat = 0;
+	eps = 1.0e-3;
 }
 
-Model::Model(double lambda_, double time_) {
+ModelPoisson::ModelPoisson(double lambda_, double time_) {
 	lambda = lambda_;
 	time = time_;
 	count_requests = 0;
 	prev_count_requests = 0;
-	eps = 1.0e14;
+	lambda_stat = 0;
+	eps = 1.0e-3;
 }
 
-double Model::generateProbability() {
+double ModelPoisson::generateProbability() {
 	std::random_device rd;
 	std::mt19937 mersenne(rd());
-	std::uniform_real_distribution<double> urd(0.0, 1.0 - std::numeric_limits<double>::epsilon() * eps);
-	double p = static_cast<double>(urd(mersenne));
+	std::uniform_real_distribution<double> urd(0.0, 1.0 - eps);
+	double p = urd(mersenne);
 	return p;
 }
 
-void Model::countRequests(double part_time) {
+void ModelPoisson::countRequests(double part_time) {
 	double p = generateProbability();
 	std::cout << "Random = " << p;
 	p *= exp(lambda * part_time);
-	if (abs(1 - p) <= std::numeric_limits<double>::epsilon() * eps)
+	if (abs(1 - p) <= eps)
 		return;
 	double l = 1;
 	double F = l;
 	while (F <= p) {
 		count_requests++;
 		l *= lambda * part_time / count_requests;
-		if (l <= std::numeric_limits<double>::epsilon() * eps)
+		if (l <= eps)
 			return;
 		F += l;
 	}
 }
 
-bool Model::isCorrect() {
-	return abs(prev_count_requests / time - lambda) < 0.1 * lambda;
+bool ModelPoisson::isCorrect() {
+	lambda_stat = prev_count_requests / time;
+	return abs(lambda_stat - lambda) < 0.1 * lambda;
 }
 
-void Model::createModel() {
+void ModelPoisson::createModelPoisson() {
 	double current_time = time;
 	while (true) {
 		countRequests(current_time);
 		std::cout << ". Delta requests = " << count_requests << ". ";
 		prev_count_requests += count_requests;
 		std::cout << "Count requests = " << prev_count_requests << ". Time = " << time << ". ";
-		std::cout << "|" << prev_count_requests / time << " - " << lambda << "| < " << 0.1 * lambda << std::endl;
+		std::cout << "|" << lambda_stat << " - " << lambda << "| < " << 0.1 * lambda << std::endl;
 		if (isCorrect())
 			break;
 		count_requests = 0;
@@ -68,7 +70,7 @@ void Model::createModel() {
 	std::sort(requests.begin(), requests.end());
 }
 
-void Model::print() {
+void ModelPoisson::print() {
 	std::cout << "Lambda = " << lambda << ". Time = " << time << ". Count requests = "
 		<< count_requests << "." << std::endl;
 	size_t size = requests.size();
@@ -78,4 +80,8 @@ void Model::print() {
 			std::cout << ", ";
 	}
 	std::cout << ";" << std::endl;
+}
+
+double ModelPoisson::getLambdaStat() {
+	return lambda_stat;
 }
