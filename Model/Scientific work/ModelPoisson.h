@@ -1,30 +1,22 @@
 #pragma once
+
+#include "Model.h"
+
 #include <vector>
-#include <ostream>
-#include <iostream>
-#include <random>
 
-class ModelPoisson {
-protected:
-	double lambda;
-	double time;
-	size_t count_requests;
-	size_t prev_count_requests;
-	std::vector<double> requests;
-	double lambda_stat;
+class ModelPoisson : public Model {
+    int countRequests();
+    bool isCorrect(int count_requests_, double time_) const;
 
-private:
-	double eps;
-	double generateProbability();
-	void countRequests(double part_time);
-	bool isCorrect();
+  protected:
+    double time;
+    std::vector<double> requests;
 
-public:
-	ModelPoisson();
-	ModelPoisson(double lambda_, double time_);
-	~ModelPoisson() = default;
+  public:
+    ModelPoisson();
+    ModelPoisson(double lambda_, double time_);
+    ~ModelPoisson() = default;
 
-	void createModelPoisson();
-	void print();
-	double getLambdaStat();
+    void createModel() override;
+    void print() const;
 };

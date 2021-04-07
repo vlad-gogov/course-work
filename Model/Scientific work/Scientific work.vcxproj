@@ -140,11 +140,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelBartlet.cpp" />
     <ClCompile Include="ModelPoisson.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Model.h" />
     <ClInclude Include="ModelBartlet.h" />
     <ClInclude Include="ModelPoisson.h" />
   </ItemGroup>
