@@ -18,10 +18,5 @@ int main() {
     c.print();
     std::cout << std::endl;
 
-    ModelPoisson d(0.1, 10);
-    d.createModel();
-    d.print();
-    std::cout << std::endl;
-
     return 0;
 }

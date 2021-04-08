@@ -28,17 +28,18 @@ int ModelBartlet::countRequests() {
     return count;
 }
 
-bool ModelBartlet::isCorrect(double lambda_stat, double r_stat, double expected_value_stat,
+bool ModelBartlet::isCorrect(double r_stat, double expected_value_stat,
                              double lambda_bertlet_stat) const {
     double lambda_bartlet = lambda * getExpectedValue();
     double expected_value = 1 + r / (1 - g);
-    return (std::abs(lambda_stat - lambda) < 0.1 * lambda && std::abs(r_stat - r) < 0.1 * r &&
+    return (std::abs(r_stat - r) < 0.1 * r &&
             std::abs(expected_value_stat - expected_value) < 0.1 * expected_value &&
             std::abs(lambda_bertlet_stat - lambda_bartlet) < 0.1 * lambda_bartlet);
 }
 
 void ModelBartlet::createModel() {
 	double full_time = time;
+    double r_stat = 0, expected_value_stat = 0, lambda_bertlet_stat = 0;
     do {
         ModelPoisson slow_cars(lambda, time);
         slow_cars.createModel();
@@ -64,7 +65,12 @@ void ModelBartlet::createModel() {
             buildPack(average_pack_length, slow_cars.getRequests()[i], count_fast_car[i]);
         }
 
-    } while (true); // TODO
+        size_t count_pack = requests.size();
+
+        for (size_t i = 0; i < count_pack; i++) {
+        }
+
+    } while (isCorrect(r_stat, expected_value_stat, lambda_bertlet_stat)); // TODO
 }
 
 void ModelBartlet::buildPack(double average_pack_length, double time_start, size_t count_fast_cars) {
@@ -85,6 +91,10 @@ void ModelBartlet::buildPack(double average_pack_length, double time_start, size
 
 double ModelBartlet::getExpectedValue() const {
     return 1 + (r / 1 - g);
+}
+
+double ModelBartlet::getExpectedValue(double r_, double g_) const {
+    return 1 + (r_ / 1 - g_);
 }
 
 double ModelBartlet::getProbably(size_t k) {

@@ -6,7 +6,7 @@
 
 class ModelBartlet : public Model {
     int countRequests() override;
-    bool isCorrect(double lambda_stat, double r_stat, double expected_value_stat, double lambda_bertlet_stat) const;
+    bool isCorrect(double r_stat, double expected_value_stat, double lambda_bertlet_stat) const;
     void buildPack(double average_pack_length, double time_start, size_t count_fast_cars);
 
   protected:
@@ -20,6 +20,7 @@ class ModelBartlet : public Model {
     ModelBartlet(double lambda_, double time_, double r, double j);
 
     double getExpectedValue() const;
+    double getExpectedValue(double r_, double g_) const;
 
     void createModel() override;
 
