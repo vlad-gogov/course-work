@@ -2,6 +2,7 @@
 
 #include "Model.h"
 
+#include <algorithm>
 #include <vector>
 
 class ModelPoisson : public Model {
@@ -18,5 +19,6 @@ class ModelPoisson : public Model {
     ~ModelPoisson() = default;
 
     void createModel() override;
+    const std::vector<double>& getRequests() const;
     void print() const;
 };

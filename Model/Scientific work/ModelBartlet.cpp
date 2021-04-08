@@ -1,13 +1,14 @@
 #include "ModelBartlet.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include "ModelPoisson.h"
 
-ModelBartlet::ModelBartlet() : r(0), g(0) {
+ModelBartlet::ModelBartlet() : time(0), r(0), g(0) {
 }
 
-ModelBartlet::ModelBartlet(double lambda_, double r_, double g_) : Model(lambda_), r(r_), g(g_) {
+ModelBartlet::ModelBartlet(double lambda_, double time_, double r_, double g_) : Model(lambda_), time(time_), r(r_), g(g_) {
 }
 
 int ModelBartlet::countRequests() {
@@ -29,7 +30,7 @@ int ModelBartlet::countRequests() {
 
 bool ModelBartlet::isCorrect(double lambda_stat, double r_stat, double expected_value_stat,
                              double lambda_bertlet_stat) const {
-    double lambda_bartlet = getLambdaBartlet();
+    double lambda_bartlet = lambda * getExpectedValue();
     double expected_value = 1 + r / (1 - g);
     return (std::abs(lambda_stat - lambda) < 0.1 * lambda && std::abs(r_stat - r) < 0.1 * r &&
             std::abs(expected_value_stat - expected_value) < 0.1 * expected_value &&
@@ -37,11 +38,53 @@ bool ModelBartlet::isCorrect(double lambda_stat, double r_stat, double expected_
 }
 
 void ModelBartlet::createModel() {
-	// TODO: Implementation
+	double full_time = time;
+    do {
+        ModelPoisson slow_cars(lambda, time);
+        slow_cars.createModel();
+        size_t count_slow_cars = slow_cars.getRequests().size();
+        std::vector<size_t> count_fast_car;
+        double delta_min_time = std::numeric_limits<double>::max();
+
+        for (size_t i = 0; i < count_slow_cars; i++) {
+            count_fast_car.push_back(countRequests());
+        }
+
+        for (size_t i = 1; i < count_slow_cars; i++) {
+            double delta = slow_cars.getRequests()[i] - slow_cars.getRequests()[i - 1];
+            if (delta < delta_min_time)
+                delta_min_time = delta;
+        }
+
+        double max_count_fast_cars = *std::max_element(slow_cars.getRequests().begin(), slow_cars.getRequests().end());
+
+        double average_pack_length = delta_min_time / max_count_fast_cars;
+
+        for (size_t i = 0; i < count_slow_cars; i++) {
+            buildPack(average_pack_length, slow_cars.getRequests()[i], count_fast_car[i]);
+        }
+
+    } while (true); // TODO
 }
 
-double ModelBartlet::getLambdaBartlet() const {
-    return lambda * (1 + (r / 1 - g));
+void ModelBartlet::buildPack(double average_pack_length, double time_start, size_t count_fast_cars) {
+    std::vector<double> pack;
+    for (size_t i = 0; i < count_fast_cars; i++) {
+        double time_moment;
+        do {
+            double p = generateProbability();
+            time_moment = p * average_pack_length;
+        } while (time_moment > time);
+        pack.push_back(time_moment);
+    }
+
+    std::sort(pack.begin(), pack.end());
+
+    requests.insert({count_fast_cars, pack});
+}
+
+double ModelBartlet::getExpectedValue() const {
+    return 1 + (r / 1 - g);
 }
 
 double ModelBartlet::getProbably(size_t k) {

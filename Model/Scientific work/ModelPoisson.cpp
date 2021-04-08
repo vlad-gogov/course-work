@@ -33,16 +33,14 @@ bool ModelPoisson::isCorrect(int count_requests_, double time_) const {
 }
 
 void ModelPoisson::createModel() {
-    double full_time = time;
+    double full_time = 0;
     int count = 0;
-    while (true) {
+    do {
+        full_time += time;
         count += countRequests();
         std::cout << ". Count requests = " << count << ". Time = " << time << ". "
                   << "|" << count / time << " - " << lambda << "| < " << 0.1 * lambda << std::endl;
-        if (isCorrect(count, full_time))
-            break;
-        full_time += time;
-    }
+    } while (isCorrect(count, full_time));
     time = full_time;
     requests.resize(count);
     for (size_t i = 0; i < count; i++) {
@@ -50,6 +48,10 @@ void ModelPoisson::createModel() {
     }
 
     std::sort(requests.begin(), requests.end());
+}
+
+const std::vector<double>& ModelPoisson::getRequests() const {
+    return requests;
 }
 
 void ModelPoisson::print() const {
