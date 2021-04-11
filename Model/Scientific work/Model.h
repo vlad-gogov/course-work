@@ -15,10 +15,7 @@ class Model {
     Model(double lambda_);
 
     double generateProbability() const;
-    virtual int countRequests() = 0;
+    virtual size_t countRequests() = 0;
 
     virtual ~Model() = default;
-
-  public:
-    virtual void createModel() = 0;
 };

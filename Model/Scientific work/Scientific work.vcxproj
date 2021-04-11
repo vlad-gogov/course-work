@@ -140,12 +140,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CarFlow.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelBartlet.cpp" />
     <ClCompile Include="ModelPoisson.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CarFlow.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelBartlet.h" />
     <ClInclude Include="ModelPoisson.h" />
