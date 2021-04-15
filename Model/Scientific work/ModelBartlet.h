@@ -2,18 +2,15 @@
 
 #include "Model.h"
 
-#include <unordered_map>
-
 class ModelBartlet : public Model {
 
   protected:
-    double time;
     const double r;
     const double g;
 
   public:
     ModelBartlet();
-    ModelBartlet(double lambda_, double time_, double r, double j);
+    ModelBartlet(double r, double g);
 
     double getExpectedValue() const;
     double getExpectedValue(double r_, double g_) const;

@@ -3,10 +3,10 @@
 #include <cmath>
 #include <iostream>
 
-ModelPoisson::ModelPoisson() : time(0) {
+ModelPoisson::ModelPoisson() : time(0), lambda(0) {
 }
 
-ModelPoisson::ModelPoisson(double lambda_, double time_) : Model(lambda_), time(time_) {
+ModelPoisson::ModelPoisson(double lambda_, double time_) : lambda(lambda_), time(time_) {
 }
 
 size_t ModelPoisson::countRequests() {

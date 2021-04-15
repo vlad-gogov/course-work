@@ -4,21 +4,16 @@
 
 #include <iostream>
 
-const double CarFlow::eps = 1e-3;
-
 CarFlow::CarFlow() : lambda(0), r(0), g(0), time(0) {}
 
-CarFlow::CarFlow(double lamda_, double time_, double r_, double g_) : lambda(lamda_), time(time_),  r(r_), g(g_), 
-																		mersenne(rd()), urd(0.0, 1.0 - eps) {}
+CarFlow::CarFlow(double lamda_, double time_, double r_, double g_) : lambda(lamda_), time(time_),  r(r_), g(g_) {}
 
-double CarFlow::generateProbability() const {
-	return urd(mersenne);
-}
 
 std::vector<double> CarFlow::createCarsSlow() {
 	size_t all_count_requests = 0;
 	double full_time = 0;
 	ModelPoisson model(lambda, time);
+	std::cout << "Poisson:" << std::endl;
 	do {
 		all_count_requests += model.countRequests();
 		full_time += time;
@@ -61,10 +56,11 @@ std::vector<CarsPack> CarFlow::createFlow() {
 		flow_cars[i].second.push_back(slow_cars[i]);
 		std::cout << flow_cars[i].second[0] << ", ";
 	}
+	std::cout << std::endl;
 
 
 	// Fast cars
-	ModelBartlet model(lambda, time, r, g); // TODO
+	ModelBartlet model(r, g);
 	std::vector<std::vector<double>> pack_cars_fast;
 	double full_time = time;
 	double r_stat = 0;
@@ -76,15 +72,24 @@ std::vector<CarsPack> CarFlow::createFlow() {
 
 	std::vector<size_t> count_fast_car;
 
+	std::cout << std::endl << "Bartlet" << std::endl;
+
 	do {
 		count_fast_car.clear();
 		double delta_min_time = std::numeric_limits<double>::max();
+		size_t max_count_fast_cars = std::numeric_limits<size_t>::min();
 		size_t pack_fast = 0;
 
 		for (size_t i = 0; i < count_pack; i++) {
-			count_fast_car.push_back(model.countRequests());
-			if (count_fast_car[i] > 1)
+			size_t count_fast_cars = model.countRequests();
+			count_fast_car.push_back(count_fast_cars);
+			flow_cars[i].first += count_fast_cars;
+
+			size_t temp = count_fast_car[i];
+			if (temp > 1)
 				pack_fast++;
+			if (max_count_fast_cars < temp)
+				max_count_fast_cars = temp;
 		}
 
 		for (size_t i = 1; i < count_pack; i++) {
@@ -93,11 +98,9 @@ std::vector<CarsPack> CarFlow::createFlow() {
 				delta_min_time = delta;
 		}
 
-		double max_count_fast_cars = *std::max_element(slow_cars.begin(), slow_cars.end());
-
 		average_pack_length = delta_min_time / max_count_fast_cars;
 
-		r_stat = pack_fast / count_pack;
+		r_stat = static_cast<double>(pack_fast) / count_pack;
 		expected_value_stat = model.getExpectedValue(r_stat, average_pack_length);
 		lambda_bartlet_stat = lambda * expected_value_stat;
 

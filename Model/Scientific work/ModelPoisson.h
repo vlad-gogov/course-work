@@ -9,6 +9,7 @@ class ModelPoisson : public Model {
     bool isCorrect(int count_requests_, double time_) const;
 
   protected:
+    const double lambda;
     double time;
 
   public:
