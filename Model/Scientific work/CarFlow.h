@@ -15,6 +15,7 @@ class CarFlow : public RandomGenerator {
 	const double g;
 	double time;
 
+	bool checkDistPack(const std::vector<double>& slow_cars) const;
 	std::vector<double> createCarsSlow();
 	std::vector<double> buildPack(double average_pack_length, double time_start, size_t count_fast_cars);
 

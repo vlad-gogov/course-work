@@ -18,7 +18,7 @@ void print(const std::vector<CarsPack>& temp) {
 }
 
 int main() {
-    CarFlow a(0.1, 120, 0.9, 0.6);
+    CarFlow a(0.1, 100, 0.5, 0.5);
     std::vector<CarsPack> b = a.createFlow();
     print(b);
 
