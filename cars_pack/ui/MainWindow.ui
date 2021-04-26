@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Cars Flow Generator</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label_lambda">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>55</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Lambda:</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spinner_lambda">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>20</y>
+      <width>62</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.010000000000000</double>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spinner_time">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>50</y>
+      <width>62</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <double>10000.000000000000000</double>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_lambda_2">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>55</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Time:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_r">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>20</y>
+      <width>16</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>r:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_g">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>50</y>
+      <width>16</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>g:</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spinner_r">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>20</y>
+      <width>62</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.010000000000000</double>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="spinner_g">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>50</y>
+      <width>62</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="maximum">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="singleStep">
+     <double>0.010000000000000</double>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="button_create_pack">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>20</y>
+      <width>141</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Create pack</string>
+    </property>
+   </widget>
+   <widget class="QCustomPlot" name="graph" native="true">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>320</y>
+      <width>731</width>
+      <height>221</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QPlainTextEdit" name="text_log">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>120</y>
+      <width>731</width>
+      <height>151</height>
+     </rect>
+    </property>
+    <property name="readOnly">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>26</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>
