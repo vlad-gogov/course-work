@@ -20,9 +20,10 @@ size_t ModelBartlet::countRequests() {
     std::cout << " F: " << F;
     double l = 0.0;
     double temp_g = 1;
+    double temp = r * (1.0 - g);
     while (F <= p) {
         count++;
-        l = r * (1.0 - g) * temp_g;
+        l = temp * temp_g;
         F += l;
         if (std::abs(l) <= eps)
             return count + 1ull;

@@ -57,7 +57,7 @@ void MainWindow::createPacks() {
     ui->graph->graph(1)->setPen(QPen(Qt::black));
     ui->graph->graph(1)->setScatterStyle(style);
     ui->graph->xAxis->setLabel("t");
-    ui->graph->yAxis->axisRect()->setRangeDrag(Qt::Horizontal);
+    //ui->graph->yAxis->axisRect()->setRangeDrag(Qt::Horizontal);
     ui->graph->yAxis->setVisible(false);
     ui->graph->graph(1)->rescaleAxes();
     ui->graph->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
