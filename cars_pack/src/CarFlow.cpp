@@ -109,7 +109,7 @@ std::vector<CarsPack> CarFlow::createFlow() {
 				delta_min_time = delta;
 		}
 
-        average_pack_length = delta_min_time / (max_count_fast_cars + 3);
+        average_pack_length = delta_min_time / (max_count_fast_cars + 2);
 
 		std::cout << std::endl << delta_min_time << " / " << max_count_fast_cars << " = " << average_pack_length << std::endl;
 
