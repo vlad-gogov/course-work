@@ -22,14 +22,15 @@ bool CarFlow::checkDistPack(const std::vector<double>& slow_cars) const {
 std::vector<double> CarFlow::createCarsSlow() {
 	size_t all_count_requests = 0;
 	double full_time = 0;
-	ModelPoisson model(lambda, time);
+    double lambda_b = lambda / (1 + r/(1 - g));
+    ModelPoisson model(lambda_b, time);
 	std::cout << "Poisson:" << std::endl;
 	do {
 		all_count_requests += model.countRequests();
 		full_time += time;
 		std::cout << ". Count requests = " << all_count_requests << ". Time = " << full_time << ". "
-			<< "|" << all_count_requests / full_time << " - " << lambda << "| < " << 0.1 * lambda << std::endl;
-	} while (std::abs(all_count_requests / full_time - lambda) < 0.1 * lambda);
+            << "|" << all_count_requests / full_time << " - " << lambda_b << "| < " << 0.1 * lambda_b << std::endl;
+    } while (std::abs(all_count_requests / full_time - lambda_b) >= 0.1 * lambda_b);
 	time = full_time;
 
 	std::vector<double> slow_cars;
@@ -37,27 +38,18 @@ std::vector<double> CarFlow::createCarsSlow() {
         slow_cars.push_back(generateProbability() * time);
     }
     std::sort(slow_cars.begin(), slow_cars.end());
-    /*
-	do {
-		slow_cars.clear();
-		for (size_t i = 0; i < all_count_requests; i++) {
-			slow_cars.push_back(generateProbability() * time);
-		}
-		std::sort(slow_cars.begin(), slow_cars.end());
-	} while (!checkDistPack(slow_cars));
-    */
 
 	return slow_cars;
 }
 
 std::vector<double> CarFlow::buildPack(double average_pack_length, double time_start, size_t count_fast_cars) {
 	std::vector<double> pack;
-	for (size_t i = 0; i < count_fast_cars; i++) {
-		double time_moment;
+    for (size_t i = 0; i < count_fast_cars; i++) {
+        double time_moment = 0;
 		do {
-			double p = generateProbability();
-			time_moment = time_start + p * average_pack_length;
-		} while (time_moment > time);
+            double p = generateProbability();
+            time_moment = time_start + p * average_pack_length;
+        } while (time_moment > time);
 		pack.push_back(time_moment);
 	}
 	std::sort(pack.begin(), pack.end());
@@ -100,7 +92,7 @@ std::vector<CarsPack> CarFlow::createFlow() {
 		size_t pack_fast = 0;
 
 		for (size_t i = 0; i < count_pack; i++) {
-			size_t count_fast_cars = model.countRequests();
+            size_t count_fast_cars = model.countRequests();
 			count_fast_car.push_back(count_fast_cars);
 			flow_cars[i].first += count_fast_cars;
 
@@ -117,7 +109,7 @@ std::vector<CarsPack> CarFlow::createFlow() {
 				delta_min_time = delta;
 		}
 
-		average_pack_length = delta_min_time / max_count_fast_cars;
+        average_pack_length = delta_min_time / (max_count_fast_cars + 3);
 
 		std::cout << std::endl << delta_min_time << " / " << max_count_fast_cars << " = " << average_pack_length << std::endl;
 
