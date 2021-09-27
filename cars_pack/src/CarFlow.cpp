@@ -4,19 +4,29 @@
 
 #include <iostream>
 
-constexpr double DISTANCE_PACK = 5.0;
+constexpr double DISTANCE_PACK = 3.0;
 
 CarFlow::CarFlow() : lambda(0), time(0), r(0), g(0) {}
 
 CarFlow::CarFlow(double lamda_, double time_, double r_, double g_) : lambda(lamda_), time(time_),  r(r_), g(g_) {}
 
-bool CarFlow::checkDistPack(const std::vector<double>& slow_cars) const {
-	size_t count_slow_cars = slow_cars.size();
-	for (size_t i = 0; i < count_slow_cars - 1; i++) {
-		if (slow_cars[i + 1] - slow_cars[i] < DISTANCE_PACK)
-			return false;
-	}
-	return true;
+std::vector<CarsPack> CarFlow::checkDistPack(const std::vector<double>& slow_cars) const {
+    size_t count_slow_cars = slow_cars.size();
+    std::vector<CarsPack> result;
+    result.push_back(CarsPack(1, {slow_cars[0]}));
+    size_t index_pack = 0;
+    double temp = slow_cars[0];
+    for (size_t i = 1; i < count_slow_cars; i++) {
+       if(slow_cars[i] - temp <= DISTANCE_PACK) {
+           result[index_pack].first++;
+           result[index_pack].second.push_back(slow_cars[i]);
+       } else {
+           result.push_back(CarsPack(1ull, {slow_cars[i]}));
+           index_pack++;
+           temp = slow_cars[i];
+       }
+    }
+       return result;
 }
 
 std::vector<double> CarFlow::createCarsSlow() {
@@ -33,13 +43,13 @@ std::vector<double> CarFlow::createCarsSlow() {
     } while (std::abs(all_count_requests / full_time - lambda_b) >= 0.1 * lambda_b);
 	time = full_time;
 
-	std::vector<double> slow_cars;
+    std::vector<double> slow_cars;
     for (size_t i = 0; i < all_count_requests; i++) {
         slow_cars.push_back(generateProbability() * time);
     }
     std::sort(slow_cars.begin(), slow_cars.end());
 
-	return slow_cars;
+    return slow_cars;
 }
 
 std::vector<double> CarFlow::buildPack(double average_pack_length, double time_start, size_t count_fast_cars) {
@@ -59,73 +69,76 @@ std::vector<double> CarFlow::buildPack(double average_pack_length, double time_s
 std::vector<CarsPack> CarFlow::createFlow() {
 
 	// Slow cars
-	std::vector<double> slow_cars = createCarsSlow();
-	size_t count_pack = slow_cars.size();
-	std::vector<CarsPack> flow_cars(count_pack);
+    std::vector<double> slow_cars = createCarsSlow();
+    std::vector<CarsPack> flow_cars = checkDistPack(slow_cars);
+    size_t count_pack = flow_cars.size();
 
-	for (size_t i = 0; i < count_pack; i++) {
-		flow_cars[i].first = 1ull;
-		flow_cars[i].second.push_back(slow_cars[i]);
-		std::cout << flow_cars[i].second[0] << ", ";
-	}
-	std::cout << std::endl;
+    if (r != 0 && g != 0) {
 
+        // Fast cars
+        constexpr int c = 2;
+        ModelBartlet model_bartlet(r, g);
+        double r_stat = 0;
+        double expected_value_stat = 0;
+        double lambda_bartlet_stat = 0;
+        double average_pack_length = 0;
+        double expected_value = model_bartlet.getExpectedValue();
 
-	// Fast cars
-	ModelBartlet model(r, g);
-	std::vector<std::vector<double>> pack_cars_fast;
-	double r_stat = 0;
-	double expected_value_stat = 0;
-	double lambda_bartlet_stat = 0;
-	double average_pack_length = 0;
-	double expected_value = model.getExpectedValue();
-	double lambda_bartlet = lambda * expected_value;
+        double lambda_bartlet = lambda * expected_value;
 
-	std::vector<size_t> count_fast_car;
+        std::vector<size_t> count_fast_car;
 
-	std::cout << std::endl << "Bartlet" << std::endl;
+        std::cout << std::endl << "Bartlet:" << std::endl;
 
-	do {
-		count_fast_car.clear();
-		double delta_min_time = std::numeric_limits<double>::max();
-		size_t max_count_fast_cars = std::numeric_limits<size_t>::min();
-		size_t pack_fast = 0;
+        do {
+            count_fast_car.clear();
+            double delta_min_time = std::numeric_limits<double>::max();
+            size_t max_count_fast_cars = std::numeric_limits<size_t>::min();
+            size_t pack_fast = 0;
 
-		for (size_t i = 0; i < count_pack; i++) {
-            size_t count_fast_cars = model.countRequests();
-			count_fast_car.push_back(count_fast_cars);
-			flow_cars[i].first += count_fast_cars;
+            for (size_t i = 0; i < count_pack; i++) {
+                size_t count_fast_cars = model_bartlet.countRequests();
+                count_fast_car.push_back(count_fast_cars);
+                size_t temp = count_fast_car[i];
+                if (temp > 1)
+                    pack_fast++;
+                if (max_count_fast_cars < temp)
+                    max_count_fast_cars = temp;
+            }
 
-			size_t temp = count_fast_car[i];
-			if (temp > 1)
-				pack_fast++;
-			if (max_count_fast_cars < temp)
-				max_count_fast_cars = temp;
-		}
+            for (size_t i = 1; i < count_pack; i++) {
+                double delta = slow_cars[i] - slow_cars[i - 1];
+                if (delta < delta_min_time)
+                    delta_min_time = delta;
+            }
 
-		for (size_t i = 1; i < count_pack; i++) {
-			double delta = slow_cars[i] - slow_cars[i - 1];
-			if (delta < delta_min_time)
-				delta_min_time = delta;
-		}
+            average_pack_length = delta_min_time / (max_count_fast_cars + c);
 
-        average_pack_length = delta_min_time / (max_count_fast_cars + 2);
+            std::cout << std::endl << delta_min_time << " / " << max_count_fast_cars + c << " = " << average_pack_length << std::endl;
 
-		std::cout << std::endl << delta_min_time << " / " << max_count_fast_cars << " = " << average_pack_length << std::endl;
+            r_stat = static_cast<double>(pack_fast) / count_pack;
+            expected_value_stat = model_bartlet.getExpectedValue(r_stat, average_pack_length);
+            lambda_bartlet_stat = lambda * expected_value_stat;
 
-		r_stat = static_cast<double>(pack_fast) / count_pack;
-		expected_value_stat = model.getExpectedValue(r_stat, average_pack_length);
-		lambda_bartlet_stat = lambda * expected_value_stat;
-
-	} while (std::abs(r_stat - r) < 0.1 * r &&
-		std::abs(expected_value_stat - expected_value) < 0.1 * expected_value &&
-		std::abs(lambda_bartlet_stat - lambda_bartlet) < 0.1 * lambda_bartlet);
+        } while (std::abs(r_stat - r) < 0.1 * r &&
+            std::abs(expected_value_stat - expected_value) < 0.1 * expected_value &&
+            std::abs(lambda_bartlet_stat - lambda_bartlet) < 0.1 * lambda_bartlet);
 
 
-	for (size_t i = 0; i < count_pack; i++) {
-		std::vector<double> pack = buildPack(average_pack_length, slow_cars[i], count_fast_car[i]);
-		flow_cars[i].second.insert(flow_cars[i].second.end(), pack.begin(), pack.end());
-	}
+        for (size_t i = 0; i < count_pack; i++) {
+            if (count_fast_car[i] + 1 == flow_cars[i].first)
+                continue;
+            if (count_fast_car[i] + 1 > flow_cars[i].first) {
+                std::vector<double> pack = buildPack(average_pack_length, flow_cars[i].second[0], count_fast_car[i] - flow_cars[i].first);
+                flow_cars[i].second.insert(flow_cars[i].second.end(), pack.begin(), pack.end());
+            } else if (count_fast_car[i] < flow_cars[i].first) {
+                    while(count_fast_car[i] + 1 < flow_cars[i].first) {
+                    flow_cars[i].first--;
+                    flow_cars[i].second.pop_back();
+                }
+            }
+        }
+    }
 
     return flow_cars;
 }
