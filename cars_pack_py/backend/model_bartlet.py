@@ -23,7 +23,7 @@ class ModelBartlet(Model):
         if k == 1:
             return 1 - self.r
         if k >= 2:
-            return self.r * (1 - self.g) * g ** (k - 2)
+            return self.r * (1 - self.g) * self.g ** (k - 2)
         return 0
 
     def count_requests(self) -> int:
