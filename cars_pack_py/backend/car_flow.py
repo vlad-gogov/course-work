@@ -90,7 +90,7 @@ class CarFlow:
                 if max_count_fast_cars < temp:
                     max_count_fast_cars = temp
 
-            delta_min_time = min(slow_cars[i] - slow_cars[i - 1]
+            delta_min_time = min(flow_cars[i][0] - flow_cars[i - 1][0]
                                  for i in range(1, count_pack))
 
             average_pack_length = delta_min_time / (max_count_fast_cars + c)
@@ -99,15 +99,20 @@ class CarFlow:
                 r_stat, average_pack_length)
             lambda_bartlet_stat = self.lamb * expected_value_stat
 
-        for count_fast, flow in zip(count_fast_car, flow_cars):
-            if count_fast + 1 == len(flow):
-                continue
-            if count_fast + 1 > len(flow):
-                pack = self._build_pack(
-                    average_pack_length, flow[0], count_fast - len(flow))
-                flow.extend(pack)
-            elif count_fast < len(flow):
-                while count_fast + 1 < len(flow):
+        if count_fast_car:
+            for count_fast, flow in zip(count_fast_car, flow_cars):
+                if count_fast + 1 == len(flow):
+                    continue
+                if count_fast + 1 > len(flow):
+                    pack = self._build_pack(
+                        average_pack_length, flow[0], count_fast - len(flow))
+                    flow.extend(pack)
+                elif count_fast < len(flow):
+                    while count_fast + 1 < len(flow):
+                        flow.pop()
+        else:
+            for flow in flow_cars:
+                while len(flow) != 1:
                     flow.pop()
 
         return flow_cars
