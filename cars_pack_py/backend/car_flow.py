@@ -6,7 +6,7 @@ import random
 
 
 class CarFlow:
-    def __init__(self, lamb=0, time=0, r=0, g=0) -> None:
+    def __init__(self, lamb: float = 0, time: float = 0, r: float = 0, g: float = 0) -> None:
         self.lamb = lamb
         self.time = time
         self.r = r
@@ -42,6 +42,7 @@ class CarFlow:
             0, 1 - consts.EPSILON) * self.time for i in range(all_count_requests)]
 
         slow_cars.sort()
+
         return slow_cars
 
     def _build_pack(self, average_pack_length: float, time_start: float, count_fast_cars: int):
@@ -56,7 +57,7 @@ class CarFlow:
         pack.sort()
         return pack
 
-    def create_flow(self):
+    def create_flow(self, time_start: float = 0) -> list:
         # Slow cars
         slow_cars = self._create_cars_slow()
         flow_cars = self._check_distance_pack(slow_cars)
@@ -114,5 +115,10 @@ class CarFlow:
             for flow in flow_cars:
                 while len(flow) != 1:
                     flow.pop()
+
+        if time_start != 0:
+            for i in range(len(flow_cars)):
+                for j in range(len(flow_cars[i])):
+                    flow_cars[i][j] += time_start
 
         return flow_cars
