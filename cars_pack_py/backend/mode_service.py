@@ -10,8 +10,8 @@ class ModeService():
     def service(self, flow_cars: Flow, start_time: float = 0):
         pass
 
-    def getType(self):
+    def get_type(self):
         return self.mode
 
-    def getTime(self):
+    def get_time(self):
         return self.time_work

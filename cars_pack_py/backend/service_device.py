@@ -17,8 +17,8 @@ class ServiceDevice():
             flows.append(Flow())
             models.append(CarFlow(lamb[i], time, r[i], g[i]))
             # flows[i].addCars(models[i].create_flow())
-        flows[0].addCars([[1], [3], [4.5, 5], [7], [9]])
-        flows[1].addCars([[3], [4], [7], [8]])
+        flows[0].add_cars([[1], [3], [4.5, 5], [7], [9]])
+        flows[1].add_cars([[3], [4], [7], [8]])
         mods = []
         mods.append(ModeServiceDevice(10, 2))
         mods.append(ModeChange(3))
@@ -39,4 +39,4 @@ class ServiceDevice():
             iter = (iter + 1) % (len(mods) - 1)
 
         print(flows[0].y)
-        print(flows[0].getGamma(), flows[1].getGamma())
+        print(flows[0].get_gamma(), flows[1].get_gamma())

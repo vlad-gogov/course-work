@@ -19,10 +19,10 @@ class ModeServiceDevice(ModeService):
             if (flow_cars.cars[0][0] < start_time + self.time_work):
                 lengh_pack = len(flow_cars.cars[0])
                 if (lengh_pack == 1):
-                    flow_cars.addGamma(max((t - flow_cars.cars[0][0]), 0))
+                    flow_cars.add_gamma(max((t - flow_cars.cars[0][0]), 0))
                     t += self.time_service
                 else:
-                    flow_cars.addGamma(
+                    flow_cars.add_gamma(
                         lengh_pack * max((t - flow_cars.cars[0][-1]), 0), lengh_pack)
                     t += self.time_service + \
                         (flow_cars.cars[0][-1] - flow_cars.cars[0][0])
