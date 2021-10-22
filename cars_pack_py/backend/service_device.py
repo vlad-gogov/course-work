@@ -9,26 +9,34 @@ class ServiceDevice():
     def __init__(self) -> None:
         pass
 
-    def Start(self, lamb: float = 0, time: float = 0, r: float = 0, g: float = 0) -> None:
-        p1 = Flow()
-        p2 = Flow()
+    def Start(self, lamb: list, time: list, r: list, g: list) -> None:
+        count_flow = len(lamb)
+        flows = []
+        models = []
+        for i in range(count_flow):
+            flows.append(Flow())
+            models.append(CarFlow(lamb[i], time, r[i], g[i]))
+            # flows[i].addCars(models[i].create_flow())
+        flows[0].addCars([[1], [3], [4.5, 5], [7], [9]])
+        flows[1].addCars([[3], [4], [7], [8]])
         mods = []
-        model = CarFlow(lamb, time, r, g)
         mods.append(ModeServiceDevice(10, 2))
         mods.append(ModeChange(3))
         mods.append(ModeServiceDevice(10, 2))
-        mods.append(ModeServiceDevice(10, 2, Type.DETECTOR_MODE))
         mods.append(ModeChange(3))
-        p1.addCars(model.create_flow())
-        p2.addCars(model.create_flow())
+        #mods.append(ModeServiceDevice(10, 2, Type.DETECTOR_MODE))
         iter = 0
         start_time = 0
         while start_time < time:
             print("Iter: ", iter)
-            if mods[iter].getType() == Type.DETECTOR_MODE:
-                print("DETECTOR_MODE")
-            else:
-                print("Default")
-            print(start_time)
-            start_time = mods[iter].service(p1, start_time)
-            iter = 0 if len(mods) - 1 == iter else iter + 1
+            current_flow = None
+            if iter == 0:
+                current_flow = flows[0]
+            if iter == 2:
+                current_flow = flows[1]
+
+            start_time = mods[iter].service(current_flow, start_time)
+            iter = (iter + 1) % (len(mods) - 1)
+
+        print(flows[0].y)
+        print(flows[0].getGamma(), flows[1].getGamma())

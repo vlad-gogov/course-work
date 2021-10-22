@@ -4,10 +4,10 @@ from . import utils
 from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
-lamb = 0.5
+lamb = [0.5, 0.3]
 time = 300
-r = 0
-g = 0
+r = [0.5, 0.2]
+g = [0.3, 0.1]
 
 sd = ServiceDevice()
 sd.Start(lamb, time, r, g)
