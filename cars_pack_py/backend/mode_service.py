@@ -7,7 +7,7 @@ class ModeService():
         self.time_work = time_work
         self.mode = Type.DEFAULT_MODE
 
-    def service(self, flow_cars: Flow, start_time: float = 0):
+    def service(self, flow_cars: Flow, start_time: float = 0, delta: float = 0):
         pass
 
     def get_type(self):

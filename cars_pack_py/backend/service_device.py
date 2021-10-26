@@ -17,25 +17,32 @@ class ServiceDevice():
             flows.append(Flow())
             models.append(CarFlow(lamb[i], time, r[i], g[i]))
             # flows[i].addCars(models[i].create_flow())
-        flows[0].add_cars([[1], [3], [4.5, 5], [7], [9]])
-        flows[1].add_cars([[3], [4], [7], [8]])
+        flows[0].add_cars([[1], [3], [4.5, 5], [7], [9], [24]])
+        flows[1].add_cars([[3], [4], [7], [8], [11], [19]])
         mods = []
         mods.append(ModeServiceDevice(10, 2))
         mods.append(ModeChange(3))
         mods.append(ModeServiceDevice(10, 2))
+        mods.append(ModeServiceDevice(10, 2, Type.DETECTOR_MODE))
         mods.append(ModeChange(3))
-        #mods.append(ModeServiceDevice(10, 2, Type.DETECTOR_MODE))
         iter = 0
         start_time = 0
+        current_flow = None
         while start_time < time:
-            print("Iter: ", iter)
-            current_flow = None
+            print("Г (", iter + 1, ")", sep="")
             if iter == 0:
                 current_flow = flows[0]
-            if iter == 2:
+            elif iter == 2 or iter == 3:
                 current_flow = flows[1]
-
-            start_time = mods[iter].service(current_flow, start_time)
+            if mods[iter].get_type() != Type.DETECTOR_MODE:
+                start_time = mods[iter].service(current_flow, start_time)
+            else:
+                if flows[0].cars:
+                    print(flows[0].cars[0][0], "-", start_time)
+                    delta = flows[0].cars[0][0] - start_time
+                    if delta > 0:
+                        start_time = mods[iter].service(
+                            current_flow, start_time, delta)
             iter = (iter + 1) % (len(mods) - 1)
 
         print(flows[0].y)

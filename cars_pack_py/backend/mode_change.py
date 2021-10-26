@@ -8,5 +8,5 @@ class ModeChange(ModeService):
         self.time_work = time_work
         self.mode = Type.DEFAULT_MODE
 
-    def service(self, flow_cars: Flow, start_time: float = 0):
+    def service(self, flow_cars: Flow, start_time: float = 0, delta: float = 0):
         return self.time_work + start_time
