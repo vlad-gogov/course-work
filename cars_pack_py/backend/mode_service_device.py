@@ -10,24 +10,35 @@ class ModeServiceDevice(ModeService):
         self.mode = type
 
     def service(self, flow_cars: Flow, start_time: float = 0, delta: float = 0):
-        t = start_time
         # Число потенциально обслужанных машин
         l = min(int((self.time_work + delta) / self.time_service),
                 len(flow_cars.cars))
-        for i in range(l):
-            if (flow_cars.cars[0][0] < start_time + self.time_work):
-                print(i, ":", flow_cars.cars)
-                lengh_pack = len(flow_cars.cars[0])
-                if (lengh_pack == 1):
-                    flow_cars.add_gamma(max((t - flow_cars.cars[0][0]), 0))
-                    t += self.time_service
-                else:
-                    flow_cars.add_gamma(
-                        lengh_pack * max((t - flow_cars.cars[0][-1]), 0), lengh_pack)
-                    t += self.time_service + \
-                        (flow_cars.cars[0][-1] - flow_cars.cars[0][0])
-                flow_cars.cars = flow_cars.cars[1:]
+        if l == 0:
+            return self.time_work + start_time
+        t = flow_cars.cars[0]
+        for x in reversed(flow_cars.cars[:l]):
+            if x >= start_time + self.time_work:
+                l -= 1
             else:
                 break
-        print(self.time_work + start_time, ":", flow_cars.cars)
+        for i in range(l):
+            if start_time <= t <= start_time + self.time_work:
+                if (flow_cars.cars[0] < start_time + self.time_work - self.time_service):
+                    print(i, ":", flow_cars.cars)
+                    flow_cars.add_gamma(max((t - flow_cars.cars[0]), 0))
+                    t += self.time_service
+                    flow_cars.cars.pop(0)
+                else:
+                    print("Обслуживание последних скопившихся машин: ")
+                    print(i, ":", flow_cars.cars[:l - i])
+                    print("t: ", t)
+                    service_time = self.time_service if t > flow_cars.cars[0] else 0
+                    while (i < l):
+                        flow_cars.add_gamma(service_time)
+                        flow_cars.cars.pop(0)
+                        i += 1
+                    break
+            else:
+                break
+        print("Оставшиеся машины:", flow_cars.cars)
         return self.time_work + start_time
