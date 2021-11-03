@@ -5,12 +5,13 @@ from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
 lamb = [0.5, 0.3]
-time = 30
+time = 40
 r = [0.5, 0.2]
 g = [0.3, 0.1]
+time_service = [[10, 2], [3], [10, 2], [10, 2], [3]]
 
 sd = ServiceDevice()
-sd.Start(lamb, time, r, g)
+sd.Start(lamb, time, r, g, time_service)
 #flow = CarFlow(lamb, time, r, g)
 #temp = flow.create_flow(10)
 # print(temp)
