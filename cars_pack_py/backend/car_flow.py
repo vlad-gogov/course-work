@@ -57,8 +57,11 @@ class CarFlow:
         pack.sort()
         return pack
 
-    def create_flow(self, time_start: float = 0, mode: bool = False) -> list:
+    def create_flow(self, time_start: float = 0, time: float = 0, mode: bool = False) -> list:
         # Slow cars
+        t = self.time
+        if time != 0:
+            self.time = time
         slow_cars = self._create_cars_slow()
         flow_cars = self._check_distance_pack(slow_cars)
         count_pack = len(flow_cars)
@@ -124,5 +127,7 @@ class CarFlow:
         if mode:
             flow_cars = [item for sublist in flow_cars for item in sublist]
             flow_cars.sort()
+
+        self.time = t
 
         return flow_cars

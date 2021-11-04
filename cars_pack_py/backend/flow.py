@@ -12,8 +12,13 @@ class Flow():
     def add_cars(self, cars_: list) -> None:
         for car in cars_:
             self.cars.append(car)
+        self.cars.sort()
 
     def get_gamma(self) -> float:
         if self.count <= 0:
             return 0
         return self.y / self.count
+
+    def _reset(self) -> None:
+        self.y = 0
+        self.count = 0
