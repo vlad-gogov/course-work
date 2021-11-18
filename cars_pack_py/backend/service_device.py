@@ -55,7 +55,8 @@ class ServiceDevice():
             else:
                 if flows[0].cars:
                     #print(flows[0].cars[0], "-", start_time)
-                    delta = flows[0].cars[0] - start_time
+                    delta = flows[0].cars[0] - start_time - \
+                        mods[iter + 1].get_time()
                     if delta > 0:
                         start_time = mods[iter].service(
                             current_flow, start_time, delta)

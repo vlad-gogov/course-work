@@ -5,10 +5,10 @@ from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
 lamb = [0.2, 0.2]
-time = 30
+time = 100
 r = [0.5, 0.5]
 g = [0.5, 0.5]
-time_service = [[100, 2], [3], [100, 2], [0, 2], [3]]
+time_service = [[60, 0.5], [3], [45, 0.5], [0, 0.5], [3]]
 
 f = True
 count_cars = 5000
@@ -21,7 +21,8 @@ while f:
     a = sd.Start(lamb, time, r, g, time_service, b)
     if abs(a[0] - prev[0]) <= 1 and abs(a[1] - prev[1]) <= 1:
         f = False
-print(count_cars)
+    prev = a
+print(b)
 # flow = CarFlow(lamb, time, r, g)
 # temp = flow.create_flow(10)
 # print(temp)
