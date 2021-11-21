@@ -93,9 +93,11 @@ class CarFlow:
                     pack_fast += 1
                 if max_count_fast_cars < temp:
                     max_count_fast_cars = temp
-
-            delta_min_time = min(flow_cars[i][0] - flow_cars[i - 1][0]
-                                 for i in range(1, count_pack))
+            if len(flow_cars) >= 2:
+                delta_min_time = min(flow_cars[i][0] - flow_cars[i - 1][0]
+                                     for i in range(1, count_pack))
+            else:
+                delta_min_time = 0
 
             average_pack_length = delta_min_time / (max_count_fast_cars + c)
             r_stat = pack_fast / count_pack

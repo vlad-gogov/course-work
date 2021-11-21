@@ -55,8 +55,9 @@ class ServiceDevice():
             else:
                 if flows[0].cars:
                     #print(flows[0].cars[0], "-", start_time)
-                    delta = flows[0].cars[0] - start_time - \
-                        mods[iter + 1].get_time()
+                    if (flows[0]):
+                        delta = flows[0].cars[0] - start_time - \
+                            mods[iter + 1].get_time()
                     if delta > 0:
                         start_time = mods[iter].service(
                             current_flow, start_time, delta)
@@ -67,10 +68,7 @@ class ServiceDevice():
             # print()
             iter = (iter + 1) % (len(mods))
 
-        print(count_serviced_cars, ":", end=" ")
         result = []
         for flow in flows:
-            print(flow.get_gamma(), end=" ")
             result.append(flow.get_gamma())
-        print()
         return result
