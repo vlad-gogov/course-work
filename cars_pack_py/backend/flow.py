@@ -22,3 +22,13 @@ class Flow():
     def _reset(self) -> None:
         self.y = 0
         self.count = 0
+        self.cars.clear()
+
+    def get_queue(self, time: float):
+        result = 0
+        for i in range(len(self.cars)):
+            if self.cars[i] <= time:
+                result += 1
+            else:
+                break
+        return result

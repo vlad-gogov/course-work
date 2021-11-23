@@ -7,8 +7,6 @@ from ..backend.service_device import ServiceDevice
 
 utils.Test()
 
-a = pandas.read_csv('test.csv')
-print(a)
 # flow = CarFlow(lamb, time, r, g)
 # temp = flow.create_flow(10)
 # print(temp)

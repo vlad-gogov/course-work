@@ -8,6 +8,8 @@ from .car_flow import CarFlow
 #flows[0].add_cars([1, 4, 7, 9, 27])
 #flows[1].add_cars([1, 3, 5, 11])
 
+MAX_QUEUE = 1000
+
 
 class ServiceDevice():
     def __init__(self) -> None:
@@ -67,6 +69,9 @@ class ServiceDevice():
             #print("Время после обслуживания: ", start_time)
             # print()
             iter = (iter + 1) % (len(mods))
+            for i in range(len(flows)):
+                if (flows[i].get_queue(start_time) >= MAX_QUEUE):
+                    return [-1 for i in range(len(flows))]
 
         result = []
         for flow in flows:
