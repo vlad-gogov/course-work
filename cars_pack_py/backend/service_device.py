@@ -22,9 +22,9 @@ class ServiceDevice():
         for i in range(count_flow):
             flows.append(Flow())
             models.append(CarFlow(lamb[i], time, r[i], g[i]))
-            # flows[i].add_cars(models[i].create_flow(mode=True))
-        #flows[0].add_cars([1, 3, 9, 9.5, 11, 24])
-        #flows[0].add_cars([7.9, 8.1, 8.5, 9.1, 9.7])
+
+        flows[0].add_cars([2, 5, 8, 9, 18, 20, 24, 32])
+        flows[1].add_cars([3, 10, 14, 15, 21, 35, 41])
         #flows[1].add_cars([3, 4, 7, 8, 11, 19])
         #flows[0].add_cars([1, 2, 4, 5, 6, 7])
         #flows[0].add_cars([1, 4, 7, 9, 27])
@@ -42,21 +42,23 @@ class ServiceDevice():
         start_time = 0
         current_flow = None
         delta = 0
-        while flows[0].count + flows[1].count <= count_serviced_cars:
-            #print("Г (", iter + 1, ")", sep="")
-            #print("Время до обслуживания: ", start_time)
-            # print()
+        # while flows[0].count + flows[1].count <= count_serviced_cars:
+        while start_time <= time:
+            print("Г (", iter + 1, ")", sep="")
+            print("Время до обслуживания: ", start_time)
+            print()
             current_flow = flows[0] if iter == 0 else flows[1]
-            if iter == 0:
-                for i in range(len(flows)):
-                    flows[i].add_cars(models[i].create_flow(
-                        start_time, time_cycle + delta, True))
+
+            # if iter == 0:
+            #    for i in range(len(flows)):
+            #        flows[i].add_cars(models[i].create_flow(
+            #            start_time, time_cycle + delta, True))
 
             if mods[iter].get_type() != Type.DETECTOR_MODE:
                 start_time = mods[iter].service(current_flow, start_time)
             else:
                 if flows[0].cars:
-                    #print(flows[0].cars[0], "-", start_time)
+                    print(flows[0].cars[0], "-", start_time)
                     if (flows[0]):
                         delta = flows[0].cars[0] - start_time - \
                             mods[iter + 1].get_time()
