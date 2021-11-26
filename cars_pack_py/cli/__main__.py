@@ -17,7 +17,7 @@ from ..backend.service_device import ServiceDevice
 #             time_service, 0)
 #print(a[0], a[1])
 
-# utils.Test()
+utils.Test()
 utils.combine_csv()
 
 # flow = CarFlow(lamb, time, r, g)
