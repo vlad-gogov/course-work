@@ -81,7 +81,7 @@ def thread_function(thread_id: int):
 
 def Test():
 
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=9) as executor:
         executor.map(thread_function, range(9))
 
 
