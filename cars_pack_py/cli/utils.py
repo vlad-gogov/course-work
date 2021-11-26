@@ -21,7 +21,7 @@ def Test():
 
     with open("test.csv", "w", encoding='utf-8') as asfile:
         fieldnames = ['№', 'count cars', 'lamb1', 'r1', 'g1',
-                      'gamma1', "average lenght pack 1:", 'lamb2', 'r2', 'g2', 'gamma2', "average lenght pack 2:"]
+                      'gamma1', "average length pack 1:", 'lamb2', 'r2', 'g2', 'gamma2', "average length pack 2:"]
         writer = csv.DictWriter(asfile, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -57,12 +57,13 @@ def Test():
                                                  time_service, b)
                                     if abs(a[0] - prev[0]) <= 1 and abs(a[1] - prev[1]) <= 1:
                                         avglengt = expected_value(r, g)
-                                        writer.writerow({'№': l, 'count cars': count_cars, 'lamb1': lamb[0], 'r1': r[0], 'g1': g[0],
-                                                         'gamma1': a[0], "average lenght pack 1:": avglengt[0], 'lamb2': lamb[1], 'r2': r[1], 'g2': g[1], 'gamma2': a[1], "average lenght pack 2:": avglengt[1]})
+                                        writer.writerow({'№': l, 'count cars': b, 'lamb1': lamb[0], 'r1': r[0], 'g1': g[0],
+                                                         'gamma1': a[0], "average length pack 1:": avglengt[0], 'lamb2': lamb[1], 'r2': r[1], 'g2': g[1], 'gamma2': a[1], "average length pack 2:": avglengt[1]})
                                         f = False
                                     prev = a
                                 f = True
                                 l += 1
+                                print(l)
                                 g[1] += 0.1
 
                             g[1] = 0.1

@@ -23,12 +23,9 @@ class ServiceDevice():
             flows.append(Flow())
             models.append(CarFlow(lamb[i], time, r[i], g[i]))
 
-        flows[0].add_cars([2, 5, 8, 9, 18, 20, 24, 32])
-        flows[1].add_cars([3, 10, 14, 15, 21, 35, 41])
-        #flows[1].add_cars([3, 4, 7, 8, 11, 19])
-        #flows[0].add_cars([1, 2, 4, 5, 6, 7])
-        #flows[0].add_cars([1, 4, 7, 9, 27])
-        #flows[1].add_cars([1, 3, 5, 11, 13, 15])
+        #flows[0].add_cars([2, 5, 8, 9, 18, 20, 24, 32, 45, 46, 51, 55, 62])
+        #flows[1].add_cars([3, 10, 14, 15, 21, 35, 41, 45, 48, 51, 53, 55, 56])
+
         mods = []
         time_cycle = 0
         for i in range(len(time_service)):
@@ -42,23 +39,23 @@ class ServiceDevice():
         start_time = 0
         current_flow = None
         delta = 0
-        # while flows[0].count + flows[1].count <= count_serviced_cars:
-        while start_time <= time:
-            print("Г (", iter + 1, ")", sep="")
-            print("Время до обслуживания: ", start_time)
-            print()
+        while flows[0].count + flows[1].count <= count_serviced_cars:
+            # while start_time <= time:
+            #print("Г (", iter + 1, ")", sep="")
+            #print("Время до обслуживания: ", start_time)
+            # print()
             current_flow = flows[0] if iter == 0 else flows[1]
 
-            # if iter == 0:
-            #    for i in range(len(flows)):
-            #        flows[i].add_cars(models[i].create_flow(
-            #            start_time, time_cycle + delta, True))
+            if iter == 0:
+                for i in range(len(flows)):
+                    flows[i].add_cars(models[i].create_flow(
+                        start_time, time_cycle + delta, True))
 
             if mods[iter].get_type() != Type.DETECTOR_MODE:
                 start_time = mods[iter].service(current_flow, start_time)
             else:
                 if flows[0].cars:
-                    print(flows[0].cars[0], "-", start_time)
+                    #print(flows[0].cars[0], "-", start_time)
                     if (flows[0]):
                         delta = flows[0].cars[0] - start_time - \
                             mods[iter + 1].get_time()
