@@ -5,18 +5,18 @@ from . import utils
 from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
-# lamb = [0.1, 0.1]
-# time = 220
-# r = [0.1, 0.1]
-# g = [0.1, 0.1]
-# time_service = [[20, 4], [4], [15, 5], [4]]
-#
-# sd = ServiceDevice()
-#
-# a = sd.Start(lamb, time, r, g,
-#              time_service, 0)
-# print(a[0], a[1])
-utils.Test()
+lamb = [0.1, 0.1]
+time = 220
+r = [0.1, 0.1]
+g = [0.1, 0.1]
+time_service = [[20, 4], [4], [15, 5], [4]]
+
+sd = ServiceDevice()
+
+a = sd.Start(lamb, time, r, g,
+             time_service, 0)
+print(a[0], a[1])
+# utils.Test()
 
 # flow = CarFlow(lamb, time, r, g)
 # temp = flow.create_flow(10)
