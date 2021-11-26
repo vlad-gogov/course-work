@@ -1,5 +1,7 @@
 import csv
-from os import write
+import os
+import glob
+import pandas as pd
 from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
@@ -21,7 +23,8 @@ def expected_value(r: list, g: list) -> list:
 
 def thread_function(thread_id: int):
     asfile = open(
-        f"cars_pack_py\\results\\test_{thread_id}.csv", "w", encoding='utf-8')
+        f"cars_pack_py//results//test_{thread_id}.csv", "w", encoding='utf-8')
+
     fieldnames = ['#', 'count cars', 'lamb1', 'lamb2', 'r1', 'r2', 'g1', 'g2',
                   'gamma1', 'gamma2', "average length pack 1:", "average length pack 2:"]
     writer = csv.DictWriter(asfile, fieldnames=fieldnames)
@@ -77,5 +80,17 @@ def thread_function(thread_id: int):
 
 
 def Test():
-    with ThreadPoolExecutor(max_workers=12) as executor:
+
+    with ThreadPoolExecutor(max_workers=4) as executor:
         executor.map(thread_function, range(9))
+
+
+def combine_csv():
+    os.chdir("cars_pack_py//results//")
+
+    extension = 'csv'
+    all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
+
+    combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames])
+    combined_csv.to_csv("test.csv",
+                        index=False, encoding='utf-8')
