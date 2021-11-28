@@ -6,6 +6,8 @@ from .car_flow import CarFlow
 from .utils import debug_log
 
 MAX_QUEUE = 1000
+EPSILON_TIME = 1
+EPSILON_DISPERSION = 1
 
 
 class ServiceDevice():
@@ -70,4 +72,19 @@ class ServiceDevice():
         result = []
         for flow in flows:
             result.append(flow.get_gamma())
+            result.append(flow.get_dispersion())
         return result
+
+    def get_weight_avg_gamma(self, lambs: list, gammas: list):
+        numerator = 0
+        denomerator = 1
+        for i in range(len(lambs)):
+            numerator += lambs[i] * gammas[i]
+            denomerator += lambs[i]
+        return numerator / denomerator
+
+    def check_gamma(self, gammas: list):
+        for gamma in gammas:
+            if gamma == -1:
+                return False
+        return True

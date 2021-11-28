@@ -2,9 +2,13 @@ import csv
 import os
 import glob
 import pandas as pd
+import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
+
+EPSILON_TIME = 1
+EPSILON_DISPERSION = 1
 
 
 def averageLengthPack(car_flow: list) -> float:
@@ -81,7 +85,7 @@ def thread_function(thread_id: int):
 
 def Test():
 
-    with ThreadPoolExecutor(max_workers=9) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         executor.map(thread_function, range(9))
 
 
@@ -94,3 +98,51 @@ def combine_csv():
     combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames])
     combined_csv.to_csv("test.csv",
                         index=False, encoding='utf-8')
+
+#time_service = [[60, 0.5], [3], [60, 0.5], [0, 0.5], [3]]
+
+
+def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int):
+
+    f = True
+    count_cars = 5000
+    sd = ServiceDevice()
+
+    t1 = time_service[0][1]
+    t3 = time_service[2][1]
+
+    sd = ServiceDevice()
+
+    tabl = np.zeros((int(K - t3 - time_service[1][0] - time_service[4]
+                    [0]), int(K - t1 - time_service[1][0] - time_service[4][0])))
+
+    print(tabl.shape)
+
+    result = np.zeros(len(lamb))
+
+    index_i = tabl.shape[0] - 1
+    index_j = 0
+
+    while t1 + time_service[1][0] + t3 + time_service[3][0] <= K and sd.check_gamma(result):
+        while t1 + time_service[1][0] + t3 + time_service[3][0] <= K and sd.check_gamma(result):
+            prev = sd.Start(lamb, time, r, g, time_service, count_cars)
+            b = count_cars
+            while f:
+                b += count_cars
+                result = sd.Start(lamb, time, r, g, time_service, b)
+                if result[0] == -1 or result[2] == -1:
+                    tabl[index_i, index_j] = -1
+                    break
+                if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= EPSILON_DISPERSION and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[3] - prev[3]) <= EPSILON_DISPERSION:
+                    avg = sd.get_weight_avg_gamma(lamb, [result[0], result[2]])
+                    tabl[index_i, index_j] = avg
+                    f = False
+            result = np.zeros((len(lamb)))
+            t1 += 1
+            index_i -= 1
+        t1 = time_service[0][1]
+        index_i = tabl.shape[0] - 1
+        index_j += 1
+        t3 += 1
+
+    print(tabl)
