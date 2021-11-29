@@ -17,13 +17,11 @@ class ServiceDevice():
     def Start(self, lamb: list, time: list, r: list, g: list, time_service: list, count_serviced_cars: int) -> list:
         count_flow = len(lamb)
         flows = []
-        models = []
         for i in range(count_flow):
             flows.append(Flow())
-            models.append(CarFlow(lamb[i], time, r[i], g[i]))
 
-        #flows[0].add_cars([2, 5, 8, 9, 18, 20, 24, 32, 45, 46, 51, 55, 62])
-        #flows[1].add_cars([3, 10, 14, 15, 21, 35, 41, 45, 48, 51, 53, 55, 56])
+        # flows[0].add_cars([2, 5, 8, 9, 18, 20, 24, 32, 45, 46, 51, 55, 62])
+        # flows[1].add_cars([3, 10, 14, 15, 21, 35, 41, 45, 48, 51, 53, 55, 56])
 
         mods = []
         time_cycle = 0
@@ -34,12 +32,15 @@ class ServiceDevice():
                     time_service[i][0], time_service[i][1], Type.DETECTOR_MODE if time_service[i][0] == 0 else None))
             if len(time_service[i]) == 1:
                 mods.append(ModeChange(time_service[i][0]))
+        for i in range(len(flows)):
+            flows[i].add_cars(CarFlow(lamb[i], time_cycle,
+                              r[i], g[i]).create_flow(0, mode=True))
         iter = 0
         start_time = 0
         current_flow = None
         delta = 0
-        while flows[0].count <= count_serviced_cars and flows[1].count <= count_serviced_cars:
-            # while start_time <= time:
+        # while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
+        while start_time <= time:
             debug_log("Г (", iter + 1, ")", sep="")
             debug_log("Время до обслуживания: ", start_time, "\n")
 
@@ -47,8 +48,8 @@ class ServiceDevice():
 
             if iter == 0:
                 for i in range(len(flows)):
-                    flows[i].add_cars(models[i].create_flow(
-                        start_time, time_cycle + delta, True))
+                    flows[i].add_cars(CarFlow(lamb[i], time_cycle + delta, r[i], g[i]).create_flow(
+                        start_time + time_cycle, mode=True))
 
             if mods[iter].get_type() != Type.DETECTOR_MODE:
                 start_time = mods[iter].service(current_flow, start_time)

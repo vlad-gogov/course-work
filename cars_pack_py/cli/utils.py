@@ -105,63 +105,70 @@ def combine_csv():
 def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int):
 
     sum = 0
-    for time in time_service:
-        sum += time[0]
+    for t in time_service:
+        sum += t[0]
 
     if sum > K:
         print("Некоректное значение K")
         return
 
-    f = True
+    final = True
     count_cars = 5000
     sd = ServiceDevice()
 
     t1 = time_service[0][0]
-    print("T1", t1)
     t3 = time_service[2][0]
-    print("T3", t3)
 
     sd = ServiceDevice()
 
-    tabl = np.zeros((int(K - sum) + 1, int(
-        K - sum) + 1))
+    tabl = np.zeros((int(K - sum) + 2, int(
+        K - sum) + 2))
+
+    for i in range(tabl.shape[0] - 1):
+        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i
+        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i
 
     print(tabl.shape)
 
     result = np.zeros(len(lamb))
 
-    index_i = tabl.shape[0] - 1
-    index_j = 0
+    index_i = tabl.shape[0] - 2
+    index_j = 1
+    tabl[index_i + 1, index_j - 1] = 0
     print(index_i, index_j)
 
-    print("Условие 1 цикла:", t1 +
-          time_service[1][0] + t3 + time_service[4][0], "<=", K)
-    while t1 + time_service[1][0] + t3 + time_service[4][0] <= K:
-        while t1 + time_service[1][0] + t3 + time_service[4][0] <= K:
-            print("Условие 2 цикла:", t1 +
-                  time_service[1][0] + t3 + time_service[4][0], "<=", K)
-            prev = sd.Start(lamb, time, r, g, time_service, count_cars)
+    while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
+        print("Условие 1 цикла:", time_service[0][0] +
+              time_service[1][0] + time_service[2][0] + time_service[4][0], "<=", K)
+        while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
+            print("Условие 2 цикла:", time_service[0][0] +
+                  time_service[1][0] + time_service[2][0] + time_service[4][0], "<=", K)
+            prev = sd.Start(lamb, sum, r, g, time_service, count_cars)
             b = count_cars
-            while f:
+            over_queue = False
+            while final:
                 b += count_cars
-                result = sd.Start(lamb, time, r, g, time_service, b)
-                print(result, prev)
+                result = sd.Start(lamb, sum, r, g, time_service, b)
+                # print(result, prev)
                 if result[0] == -1 or result[2] == -1:
                     tabl[index_i, index_j] = -1
-                    f = False
-                elif abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= EPSILON_DISPERSION and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[3] - prev[3]) <= EPSILON_DISPERSION:
+                    over_queue = True
+                    break
+                elif abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
                     avg = sd.get_weight_avg_gamma(lamb, [result[0], result[2]])
                     tabl[index_i, index_j] = avg
-                    f = False
+                    final = False
                 prev = result
-            result = np.zeros((len(lamb)))
-            t1 += 1
+            if over_queue:
+                over_queue = False
+                break
+            time_service[0][0] += 1
             index_i -= 1
-            print("Смена индексов: ", index_i, index_j)
-            f = True
-        t1 = time_service[0][0]
-        index_i = tabl.shape[0] - 1
+            final = True
+        time_service[0][0] = t1
+        index_i = tabl.shape[0] - 2
         index_j += 1
-        t3 += 1
+        time_service[2][0] += 1
 
-    print(tabl)
+    pd.DataFrame(tabl).to_csv(
+        f"cars_pack_py//results//test_{lamb[0]}_{r[0]}_{g[0]}_{lamb[1]}_{r[1]}_{g[1]}.csv", index=False)
