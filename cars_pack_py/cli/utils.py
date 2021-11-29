@@ -99,22 +99,32 @@ def combine_csv():
     combined_csv.to_csv("test.csv",
                         index=False, encoding='utf-8')
 
-#time_service = [[60, 0.5], [3], [60, 0.5], [0, 0.5], [3]]
+# time_service = [[20, 1], [3], [20, 1], [0, 1], [3]]
 
 
 def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int):
+
+    sum = 0
+    for time in time_service:
+        sum += time[0]
+
+    if sum > K:
+        print("Некоректное значение K")
+        return
 
     f = True
     count_cars = 5000
     sd = ServiceDevice()
 
-    t1 = time_service[0][1]
-    t3 = time_service[2][1]
+    t1 = time_service[0][0]
+    print("T1", t1)
+    t3 = time_service[2][0]
+    print("T3", t3)
 
     sd = ServiceDevice()
 
-    tabl = np.zeros((int(K - t3 - time_service[1][0] - time_service[4]
-                    [0]), int(K - t1 - time_service[1][0] - time_service[4][0])))
+    tabl = np.zeros((int(K - sum) + 1, int(
+        K - sum) + 1))
 
     print(tabl.shape)
 
@@ -122,25 +132,34 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
 
     index_i = tabl.shape[0] - 1
     index_j = 0
+    print(index_i, index_j)
 
-    while t1 + time_service[1][0] + t3 + time_service[3][0] <= K and sd.check_gamma(result):
-        while t1 + time_service[1][0] + t3 + time_service[3][0] <= K and sd.check_gamma(result):
+    print("Условие 1 цикла:", t1 +
+          time_service[1][0] + t3 + time_service[4][0], "<=", K)
+    while t1 + time_service[1][0] + t3 + time_service[4][0] <= K:
+        while t1 + time_service[1][0] + t3 + time_service[4][0] <= K:
+            print("Условие 2 цикла:", t1 +
+                  time_service[1][0] + t3 + time_service[4][0], "<=", K)
             prev = sd.Start(lamb, time, r, g, time_service, count_cars)
             b = count_cars
             while f:
                 b += count_cars
                 result = sd.Start(lamb, time, r, g, time_service, b)
+                print(result, prev)
                 if result[0] == -1 or result[2] == -1:
                     tabl[index_i, index_j] = -1
-                    break
-                if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= EPSILON_DISPERSION and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[3] - prev[3]) <= EPSILON_DISPERSION:
+                    f = False
+                elif abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= EPSILON_DISPERSION and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[3] - prev[3]) <= EPSILON_DISPERSION:
                     avg = sd.get_weight_avg_gamma(lamb, [result[0], result[2]])
                     tabl[index_i, index_j] = avg
                     f = False
+                prev = result
             result = np.zeros((len(lamb)))
             t1 += 1
             index_i -= 1
-        t1 = time_service[0][1]
+            print("Смена индексов: ", index_i, index_j)
+            f = True
+        t1 = time_service[0][0]
         index_i = tabl.shape[0] - 1
         index_j += 1
         t3 += 1

@@ -38,7 +38,7 @@ class ServiceDevice():
         start_time = 0
         current_flow = None
         delta = 0
-        while flows[0].count + flows[1].count <= count_serviced_cars:
+        while flows[0].count <= count_serviced_cars and flows[1].count <= count_serviced_cars:
             # while start_time <= time:
             debug_log("Г (", iter + 1, ")", sep="")
             debug_log("Время до обслуживания: ", start_time, "\n")

@@ -7,11 +7,11 @@ from ..backend.service_device import ServiceDevice
 
 lamb = [0.1, 0.1]
 time = 100
-r = [0.1, 0.1]
-g = [0.1, 0.1]
-time_service = [[60, 1], [3], [60, 1], [0, 1], [3]]
+r = [0, 0]
+g = [0, 0]
+time_service = [[40, 1], [3], [40, 1], [0, 1], [3]]
 count_cars = 5000
-K = 10
+K = 90
 
 utils.get_grid(lamb, time, r, g, time_service, count_cars, K)
 
@@ -20,7 +20,7 @@ utils.get_grid(lamb, time, r, g, time_service, count_cars, K)
 #time = 220
 #r = [0.1, 0.1]
 #g = [0.1, 0.1]
-#time_service = [[20, 4], [4], [15, 5], [4]]
+#time_service = [[60, 1], [3], [60, 1], [0, 1], [3]]
 #
 #sd = ServiceDevice()
 #
