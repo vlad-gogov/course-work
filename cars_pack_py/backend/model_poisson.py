@@ -8,6 +8,8 @@ from . import consts
 class ModelPoisson(Model):
     def __init__(self, lamb=0, time=0) -> None:
         super().__init__()
+        if not (0 <= lamb <= 1 ):
+            raise ValueError()
         self.lamb = lamb
         self.time = time
 
