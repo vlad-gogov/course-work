@@ -15,6 +15,7 @@ class ModeServiceDevice(ModeService):
         new_time_work = (self.time_work if delta == 0 else delta)
         l = min(int(new_time_work / self.time_service),
                 len(flow_cars.cars))
+        debug_log("L: ", l)
         if l == 0:
             return new_time_work + start_time
         t = start_time if flow_cars.cars[0] <= start_time else flow_cars.cars[0]

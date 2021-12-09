@@ -5,13 +5,13 @@ from . import utils
 from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
-lamb = [0.9, 0.5]
+lamb = [0.1, 0.1]
 time = 200
-r = [0.9, 0.5]
-g = [0.9, 0.7]
-time_service = [[20, 2], [3], [20, 1], [0, 2], [3]]
+r = [0, 0]
+g = [0, 0]
+time_service = [[60, 1], [3], [60, 1], [0, 1], [3]]
 count_cars = 5000
-K = 50
+K = 130
 
 utils.get_grid(lamb, time, r, g, time_service, count_cars, K)
 
@@ -42,3 +42,8 @@ utils.get_grid(lamb, time, r, g, time_service, count_cars, K)
 # print(1 + r / (1 - g))
 # print(utils.averageLengthPack(temp))
 # plt.show()
+
+#isG5 = True
+#p = random.uniform(0, 1 - consts.EPSILON)
+#lambda_b = lamb[0] / (1 + r[0]/(1 - g[0]))
+# flows[0].add_cars(-math.log(1-p)/lambda_b)

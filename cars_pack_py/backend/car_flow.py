@@ -63,8 +63,9 @@ class CarFlow:
         if time != 0:
             self.time = time
         slow_cars = self._create_cars_slow()
-        flow_cars = self._check_distance_pack(slow_cars)
-        count_pack = len(flow_cars)
+        # self._check_distance_pack(slow_cars)
+        flow_cars = [[car] for car in slow_cars]
+        count_pack = len(slow_cars)
 
         # Fast cars
         c = 2
@@ -105,21 +106,21 @@ class CarFlow:
                 r_stat, average_pack_length)
             lambda_bartlet_stat = self.lamb * expected_value_stat
 
-        if count_fast_car:
-            for count_fast, flow in zip(count_fast_car, flow_cars):
-                if count_fast + 1 == len(flow):
-                    continue
-                if count_fast + 1 > len(flow):
-                    pack = self._build_pack(
-                        average_pack_length, flow[0], count_fast - len(flow))
-                    flow.extend(pack)
-                elif count_fast < len(flow):
-                    while count_fast + 1 < len(flow):
-                        flow.pop()
-        else:
-            for flow in flow_cars:
-                while len(flow) != 1:
-                    flow.pop()
+        # if count_fast_car:
+        #    for count_fast, flow in zip(count_fast_car, flow_cars):
+        #        if count_fast + 1 == len(flow):
+        #            continue
+        #        if count_fast + 1 > len(flow):
+        #            pack = self._build_pack(
+        #                average_pack_length, flow[0], count_fast - len(flow))
+        #            flow.extend(pack)
+        #        elif count_fast < len(flow):
+        #            while count_fast + 1 < len(flow):
+        #                flow.pop()
+        # else:
+        #    for flow in flow_cars:
+        #        while len(flow) != 1:
+        #            flow.pop()
 
         if time_start != 0:
             for i in range(len(flow_cars)):
@@ -128,7 +129,7 @@ class CarFlow:
 
         if mode:
             flow_cars = [item for sublist in flow_cars for item in sublist]
-            flow_cars.sort()
+            # flow_cars.sort()
 
         self.time = t
 

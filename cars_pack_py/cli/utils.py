@@ -10,6 +10,17 @@ from ..backend.service_device import ServiceDevice
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
+DEBUG = True
+
+
+def debug_log(*args, **kwargs):
+    pass
+
+
+if DEBUG:
+    def debug_log(*args, **kwargs):
+        print(*args, **kwargs)
+
 
 def averageLengthPack(car_flow: list) -> float:
     dist = 0
@@ -113,7 +124,6 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
         return
 
     final = True
-    count_cars = 5000
     sd = ServiceDevice()
 
     t1 = time_service[0][0]
@@ -135,29 +145,28 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
     index_i = tabl.shape[0] - 2
     index_j = 1
     tabl[index_i + 1, index_j - 1] = 0
-    print(index_i, index_j)
 
     while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
-        print("Условие 1 цикла:", time_service[0][0] +
-              time_service[1][0] + time_service[2][0] + time_service[4][0], "<=", K)
         while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
-            print("Условие 2 цикла:", time_service[0][0] +
-                  time_service[1][0] + time_service[2][0] + time_service[4][0], "<=", K)
-            prev = sd.Start(lamb, sum, r, g, time_service, count_cars)
-            b = count_cars
+            debug_log("T1 =", time_service[0][0],
+                      ", T3 =",  time_service[2][0])
+            b = count_serviced_cars
+            prev = sd.Start(lamb, sum, r, g, time_service, b)
             over_queue = False
             while final:
-                b += count_cars
                 result = sd.Start(lamb, sum, r, g, time_service, b)
-                # print(result, prev)
+                debug_log("Count cars:", b)
+                debug_log(prev)
+                debug_log(result, '\n')
                 if result[0] == -1 or result[2] == -1:
                     tabl[index_i, index_j] = -1
                     over_queue = True
                     break
-                elif abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
+                if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
                     avg = sd.get_weight_avg_gamma(lamb, [result[0], result[2]])
                     tabl[index_i, index_j] = avg
                     final = False
+                b += count_serviced_cars
                 prev = result
             if over_queue:
                 over_queue = False
@@ -165,6 +174,8 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
             time_service[0][0] += 1
             index_i -= 1
             final = True
+            pi1 = False
+            pi2 = False
         time_service[0][0] = t1
         index_i = tabl.shape[0] - 2
         index_j += 1
