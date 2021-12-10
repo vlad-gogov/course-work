@@ -5,13 +5,13 @@ from . import utils
 from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
-lamb = [0.5, 0.5]
+lamb = [0.1, 0.1]
 time = 200
 r = [0, 0]
 g = [0, 0]
-time_service = [[30, 1], [3], [30, 1], [0, 1], [3]]
+time_service = [[60, 1], [3], [60, 1], [10, 1], [3]]
 count_cars = 5000
-K = 70
+K = 140
 
 utils.get_grid(lamb, time, r, g, time_service, count_cars, K)
 

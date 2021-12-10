@@ -146,8 +146,8 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
     index_j = 1
     tabl[index_i + 1, index_j - 1] = 0
 
-    while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
-        while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
+    while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] + time_service[3][0] <= K:
+        while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] + time_service[3][0] <= K:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
             b = count_serviced_cars

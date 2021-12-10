@@ -70,10 +70,13 @@ class ServiceDevice():
                     isG5 = False
                 else:
                     isG5 = True
-                    # p = random.uniform(0, 1 - consts.EPSILON)
-                    # lambda_b = lamb[0] / (1 + r[0]/(1 - g[0]))
-                    # delta = -math.log(1-p)/lambda_b
-                    flows[0].add_cars([10 + start_time], start_time)
+                    p = random.uniform(0, 1 - consts.EPSILON)
+                    lambda_b = lamb[0] / (1 + r[0]/(1 - g[0]))
+                    delta = -math.log(1-p)/lambda_b
+                    flows[0].add_cars([delta + start_time], start_time)
+                    start_time = mods[4].service(flows[1], start_time)
+                    if delta > start_time:
+                        start_time = mods[4].service(flows[1], start_time)
             elif iter == 4:
                 if isG5:
                     flows[0].add_cars(CarFlow(lamb[0], time_service[4][0],
@@ -84,7 +87,7 @@ class ServiceDevice():
                     current_flow, start_time, delta)  # - mods[iter + 1].get_time()
                 delta = 0
                 isG5 = False
-            else:
+            elif iter != 4:
                 start_time = mods[iter].service(current_flow, start_time)
 
             iter = (iter + 1) % (len(mods))
