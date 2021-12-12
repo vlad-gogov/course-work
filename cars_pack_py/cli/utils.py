@@ -10,7 +10,7 @@ from ..backend.service_device import ServiceDevice
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
-DEBUG = True
+DEBUG = False
 
 
 def debug_log(*args, **kwargs):
@@ -113,32 +113,33 @@ def combine_csv():
 # time_service = [[20, 1], [3], [20, 1], [0, 1], [3]]
 
 
-def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = ''):
 
     sum = 0
+    orientation = 0
     for t in time_service:
         sum += t[0]
+        if len(t) == 1:
+            orientation += t[0]
 
     if sum > K:
         print("Некоректное значение K")
         return
 
     final = True
-    sd = ServiceDevice()
+    temp = time_service
 
     t1 = time_service[0][0]
     t3 = time_service[2][0]
 
-    sd = ServiceDevice()
-
-    tabl = np.zeros((int(K - sum) + 2, int(
-        K - sum) + 2))
+    tabl = np.zeros((int((K - sum) / step) + 2, int(
+        (K - sum) / step) + 2))
 
     for i in range(tabl.shape[0] - 1):
-        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i
-        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i
+        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i * step
+        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i * step
 
-    print(tabl.shape)
+    debug_log(tabl.shape)
 
     result = np.zeros(len(lamb))
 
@@ -146,15 +147,16 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
     index_j = 1
     tabl[index_i + 1, index_j - 1] = 0
 
-    while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
-        while time_service[0][0] + time_service[1][0] + time_service[2][0] + time_service[4][0] <= K:
+    while time_service[0][0] + time_service[2][0] + orientation <= K:
+        while time_service[0][0] + time_service[2][0] + orientation <= K:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
             b = count_serviced_cars
-            prev = sd.Start(lamb, sum, r, g, time_service, b)
+            sd = ServiceDevice(lamb, r, g, time_service)
+            prev = sd.Start_Seq(b)
             over_queue = False
             while final:
-                result = sd.Start(lamb, sum, r, g, time_service, b)
+                result = sd.Start_Seq(b)
                 debug_log("Count cars:", b)
                 debug_log(prev)
                 debug_log(result, '\n')
@@ -171,15 +173,43 @@ def get_grid(lamb: list, time: list, r: list, g: list, time_service: list, count
             if over_queue:
                 over_queue = False
                 break
-            time_service[0][0] += 1
+            time_service[0][0] += step
             index_i -= 1
             final = True
-            pi1 = False
-            pi2 = False
         time_service[0][0] = t1
         index_i = tabl.shape[0] - 2
         index_j += 1
-        time_service[2][0] += 1
+        time_service[2][0] += step
+    time_service = temp
 
     pd.DataFrame(tabl).to_csv(
-        f"cars_pack_py//results//test_{lamb[0]}_{r[0]}_{g[0]}_{lamb[1]}_{r[1]}_{g[1]}.csv", index=False)
+        f"cars_pack_py//results//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
+
+
+def wrapper(thread_id: int):
+    lamb = [0.1 * (thread_id + 1), 0.1]
+    r = [0, 0]
+    g = [0, 0]
+    time_service = [[5, 1], [3], [5, 1], [0, 1], [3]]
+    count_cars = 5000
+    K = 80
+    for _ in range(5):
+        for _ in range(5):
+            print("Progress: ", lamb[0], lamb[1])
+            get_grid(lamb, r, g, time_service,
+                     count_cars, K, 5, "G5")
+            lamb[1] += 0.1
+        lamb[1] = 0.1
+        lamb[0] += 0.1
+
+
+def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = ''):
+    for _ in range(5):
+        for _ in range(5):
+            print("Progress: ", lamb[0], lamb[1])
+            current_time = time_service
+            get_grid(lamb, r, g, current_time,
+                     count_serviced_cars, K, step, name_grid)
+            lamb[1] += 0.1
+        lamb[1] = 0.1
+        lamb[0] += 0.1
