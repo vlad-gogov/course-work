@@ -163,12 +163,13 @@ class ServiceDevice():
             result.append(flow.get_dispersion())
         return result
 
-    def get_weight_avg_gamma(self, lambs: list, gammas: list):
+    def get_weight_avg_gamma(self, gammas: list):
         numerator = 0
-        denomerator = 1
-        for i in range(len(lambs)):
-            numerator += lambs[i] * gammas[i]
-            denomerator += lambs[i]
+        denomerator = 0
+        for i in range(len(self.lamb)):
+            lamb_b = self.lamb[i] / (1 + self.r[i]/(1 - self.g[i]))
+            numerator += lamb_b * gammas[i]
+            denomerator += lamb_b
         return numerator / denomerator
 
     def check_gamma(self, gammas: list):

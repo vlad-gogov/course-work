@@ -5,18 +5,22 @@ from . import utils
 from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
-lamb = [0.4, 0.5]
-r = [0, 0]
-g = [0, 0]
+lamb = [0.1, 0.2]
+r = [0.7, 0.7]
+g = [0.7, 0.7]
 time_service = [[5, 1], [3], [5, 1], [3]]
 count_cars = 5000
 K = 80
 sd = ServiceDevice(lamb, r, g, time_service)
 #prev = sd.Start(2)
-utils.get_grid(lamb, r, g, time_service, count_cars, K, 5, "Loop")
-# with ThreadPoolExecutor(max_workers=2) as executor:
+utils.get_grid(lamb, r, g, time_service, count_cars, K, 5,
+               "Loop", "cars_pack_py//results//Bartlet//Loop")
+
+# with ThreadPoolExecutor(max_workers=5) as executor:
 #    executor.map(utils.wrapper, range(5))
-#utils.while_param(lamb, r, g, time_service, count_cars, K, 5, "WITHOUT_G5")
+
+# utils.while_param(lamb, r, g, time_service, count_cars, K, 5,
+#                  "G5", "cars_pack_py//results//Bartlet//G5")
 # lamb = [0.1, 0.1]
 # time = 220
 # r = [0.1, 0.1]

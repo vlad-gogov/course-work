@@ -10,7 +10,7 @@ from ..backend.service_device import ServiceDevice
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
-DEBUG = False
+DEBUG = True
 
 
 def debug_log(*args, **kwargs):
@@ -113,7 +113,7 @@ def combine_csv():
 # time_service = [[20, 1], [3], [20, 1], [0, 1], [3]]
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = ''):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
 
     sum = 0
     orientation = 0
@@ -127,7 +127,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         return
 
     final = True
-    temp = time_service
 
     t1 = time_service[0][0]
     t3 = time_service[2][0]
@@ -159,13 +158,14 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 result = sd.Start_Seq(b)
                 debug_log("Count cars:", b)
                 debug_log(prev)
-                debug_log(result, '\n')
+                debug_log(result)
                 if result[0] == -1 or result[2] == -1:
                     tabl[index_i, index_j] = -1
                     over_queue = True
                     break
                 if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
-                    avg = sd.get_weight_avg_gamma(lamb, [result[0], result[2]])
+                    avg = sd.get_weight_avg_gamma([result[0], result[2]])
+                    debug_log("Y:", avg, "\n")
                     tabl[index_i, index_j] = avg
                     final = False
                 b += count_serviced_cars
@@ -180,36 +180,39 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         index_i = tabl.shape[0] - 2
         index_j += 1
         time_service[2][0] += step
-    time_service = temp
+
+    time_service[2][0] = t3
 
     pd.DataFrame(tabl).to_csv(
-        f"cars_pack_py//results//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
+        f"{path}//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
 
 
 def wrapper(thread_id: int):
     lamb = [0.1 * (thread_id + 1), 0.1]
-    r = [0, 0]
-    g = [0, 0]
+    r = [0.0, 0.0]
+    g = [0.0, 0.0]
     time_service = [[5, 1], [3], [5, 1], [0, 1], [3]]
     count_cars = 5000
     K = 80
+    if (lamb[0] >= 0.6):
+        return
     for _ in range(5):
         for _ in range(5):
             print("Progress: ", lamb[0], lamb[1])
-            get_grid(lamb, r, g, time_service,
-                     count_cars, K, 5, "G5")
+            get_grid(lamb, r, g, time_service, count_cars, K, 5,
+                     "Loop", "cars_pack_py//results//Puasson//Loop")
             lamb[1] += 0.1
         lamb[1] = 0.1
         lamb[0] += 0.1
 
 
-def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = ''):
+def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
     for _ in range(5):
         for _ in range(5):
             print("Progress: ", lamb[0], lamb[1])
-            current_time = time_service
+            current_time = time_service.copy()
             get_grid(lamb, r, g, current_time,
-                     count_serviced_cars, K, step, name_grid)
+                     count_serviced_cars, K, step, name_grid, path)
             lamb[1] += 0.1
         lamb[1] = 0.1
         lamb[0] += 0.1
