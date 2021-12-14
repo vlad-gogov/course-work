@@ -13,14 +13,11 @@ class Flow():
         self.count += count
         self.queue -= count
 
-    def add_cars(self, cars_: list, time: float) -> None:
+    def add_cars(self, cars_: list) -> None:
         for car in cars_:
             self.cars.append(car)
-            if car <= time:
-                self.queue += 1
-            else:
-                break
-        # self.cars.sort()
+            self.queue += 1
+        self.cars.sort()
 
     def get_gamma(self) -> float:
         if self.count <= 0:

@@ -47,8 +47,9 @@ class ServiceDevice():
             self.time_service[1][0] + self.time_service[4][0]
         time_pi1 = self.time_service[1][0] + self.time_service[2][0]
 
-        flows[1].add_cars(CarFlow(self.lamb[1], self.time_service[1][0],
-                          self.r[1], self.g[1]).create_flow(mode=True), start_time)
+        temp = CarFlow(self.lamb[1], self.time_service[1][0],
+                       self.r[1], self.g[1]).create_flow(mode=True)
+        flows[1].add_cars(temp, start_time)
 
         while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
             # while start_time <= time:
@@ -98,6 +99,8 @@ class ServiceDevice():
 
             iter = (iter + 1) % (len(mods))
             for i in range(len(flows)):
+                print(flows[i].queue)
+                input("ENTER")
                 if (flows[i].queue >= MAX_QUEUE):
                     return [-1 for i in range(2 * len(flows))]
 
@@ -122,7 +125,6 @@ class ServiceDevice():
                     self.time_service[i][0], self.time_service[i][1], Type.DETECTOR_MODE if self.time_service[i][0] == 0 else Type.DEFAULT_MODE))
             if len(self.time_service[i]) == 1:
                 mods.append(ModeChange(self.time_service[i][0]))
-
         iter = 1  # Начинаем работу с режима Г(2)
         start_time = 0
         current_flow = None
@@ -133,7 +135,7 @@ class ServiceDevice():
             self.time_service[2][0] + self.time_service[3][0]
 
         flows[1].add_cars(CarFlow(self.lamb[1], self.time_service[1][0],
-                                  self.r[1], self.g[1]).create_flow(mode=True), start_time)
+                                  self.r[1], self.g[1]).create_flow(mode=True))
 
         while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
             # while start_time <= time:
@@ -144,11 +146,13 @@ class ServiceDevice():
             current_flow = flows[0] if iter == 0 else flows[1]
 
             if iter == 1:
+                temp = CarFlow(self.lamb[0], time_pi1,
+                               self.r[0], self.g[0]).create_flow(start_time, mode=True)
                 flows[0].add_cars(CarFlow(self.lamb[0], time_pi1,
-                                          self.r[0], self.g[0]).create_flow(start_time, mode=True), start_time)
+                                          self.r[0], self.g[0]).create_flow(start_time, mode=True))
             elif iter == 3:
                 flows[1].add_cars(CarFlow(self.lamb[1], time_pi2,
-                                          self.r[1], self.g[1]).create_flow(start_time, mode=True), start_time)
+                                          self.r[1], self.g[1]).create_flow(start_time, mode=True))
 
             start_time = mods[iter].service(current_flow, start_time)
 

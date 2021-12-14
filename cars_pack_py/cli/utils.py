@@ -10,7 +10,7 @@ from ..backend.service_device import ServiceDevice
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
-DEBUG = True
+DEBUG = False
 
 
 def debug_log(*args, **kwargs):
@@ -196,8 +196,8 @@ def wrapper(thread_id: int):
     K = 80
     if (lamb[0] >= 0.6):
         return
-    for _ in range(5):
-        for _ in range(5):
+    while(lamb[0] <= 0.5):
+        while(lamb[1] <= 0.5):
             print("Progress: ", lamb[0], lamb[1])
             get_grid(lamb, r, g, time_service, count_cars, K, 5,
                      "Loop", "cars_pack_py//results//Puasson//Loop")
@@ -207,12 +207,12 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
-    for _ in range(5):
-        for _ in range(5):
-            print("Progress: ", lamb[0], lamb[1])
+    while(lamb[0] <= 0.5):
+        while(lamb[1] <= 0.5):
             current_time = time_service.copy()
             get_grid(lamb, r, g, current_time,
                      count_serviced_cars, K, step, name_grid, path)
+            print("Progress: ", lamb[0], lamb[1])
             lamb[1] += 0.1
         lamb[1] = 0.1
         lamb[0] += 0.1
