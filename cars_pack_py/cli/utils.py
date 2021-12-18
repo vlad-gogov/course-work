@@ -10,7 +10,7 @@ from ..backend.service_device import ServiceDevice
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
-DEBUG = False
+DEBUG = True
 
 
 def debug_log(*args, **kwargs):

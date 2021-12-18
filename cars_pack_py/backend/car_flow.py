@@ -32,14 +32,11 @@ class CarFlow:
         lambda_b = self.lamb / (1 + self.r/(1 - self.g))
         model = ModelPoisson(lambda_b, self.time)
         all_count_requests += model.count_requests()
-        full_time += self.time
-        # while abs(all_count_requests / full_time - lambda_b) >= 0.1 * lambda_b:
-        #    all_count_requests += model.count_requests()
-        #    full_time += self.time
-        #    # print(all_count_requests, "/", full_time,
-        #    #      "-", lambda_b, ">=", 0.1 * lambda_b)
-        #    # input("Enter")
-        #self.time = full_time
+        full_time = self.time
+        while abs(all_count_requests / full_time - lambda_b) >= 0.1 * lambda_b:
+            all_count_requests += model.count_requests()
+            full_time += self.time
+        self.time = full_time
 
         slow_cars = [random.uniform(
             0, 1 - consts.EPSILON) * self.time for i in range(all_count_requests)]

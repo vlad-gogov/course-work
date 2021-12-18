@@ -5,19 +5,18 @@ class Flow():
         self.y = 0  # Времена пребываний машин в системе
         self.y2 = 0  # Квадраты времен пребываний машин в системе
         self.count = 0  # Число обслужанных машин
-        self.queue = 0  # Кол-во машин, находящихся в очереди
+        self.last_time = 0
 
     def add_gamma(self, Yi: float, count: int = 1) -> None:
         self.y += Yi
         self.y2 += Yi ** 2
         self.count += count
-        self.queue -= count
 
     def add_cars(self, cars_: list) -> None:
         for car in cars_:
-            self.cars.append(car)
-            self.queue += 1
-        self.cars.sort()
+            self.cars.append(car + self.last_time)
+        self.last_time = self.cars[-1]
+        # self.cars.sort()
 
     def get_gamma(self) -> float:
         if self.count <= 0:
