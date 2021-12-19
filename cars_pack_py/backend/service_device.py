@@ -134,8 +134,9 @@ class ServiceDevice():
         time_pi1 = self.time_service[1][0] + \
             self.time_service[2][0] + self.time_service[3][0]
 
-        flows[1].add_cars(CarFlow(self.lamb[1], self.time_service[1][0],
-                                  self.r[1], self.g[1]).create_flow(mode=True))
+        temp = CarFlow(self.lamb[1], self.time_service[1][0],
+                       self.r[1], self.g[1])
+        flows[1].add_cars(temp.create_flow(mode=True), temp.get_time())
         isQueue = False
         while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
             # while start_time <= time:
@@ -147,18 +148,14 @@ class ServiceDevice():
 
             if iter == 1:
                 temp = CarFlow(self.lamb[0], time_pi1,
-                               self.r[0], self.g[0]).create_flow(mode=True)
-                flows[0].add_cars(temp)
-                # print(flows[0].cars)
-                #print("Time:", start_time)
-                q = flows[0].get_queue(start_time)
-                #print("Queue:", q)
-                # input("Enter")
-                if q >= MAX_QUEUE:
+                               self.r[0], self.g[0])
+                flows[0].add_cars(temp.create_flow(mode=True), temp.get_time())
+                if flows[0].get_queue(start_time) >= MAX_QUEUE:
                     isQueue = True
             elif iter == 3:
-                flows[1].add_cars(CarFlow(self.lamb[1], time_pi2,
-                                          self.r[1], self.g[1]).create_flow(mode=True))
+                temp = CarFlow(self.lamb[1], time_pi2,
+                               self.r[1], self.g[1])
+                flows[1].add_cars(temp.create_flow(mode=True), temp.get_time())
                 if flows[1].get_queue(start_time) >= MAX_QUEUE:
                     isQueue = True
 

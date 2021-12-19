@@ -187,6 +187,56 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         f"{path}//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
 
 
+def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
+
+    sum = 0
+    orientation = 0
+    for t in time_service:
+        sum += t[0]
+        if len(t) == 1:
+            orientation += t[0]
+
+    if sum > K:
+        print("Некоректное значение K")
+        return
+
+    t1 = time_service[0][0]
+    t3 = time_service[2][0]
+
+    tabl = np.zeros((int((K - sum) / step) + 2, int(
+        (K - sum) / step) + 2))
+
+    for i in range(tabl.shape[0] - 1):
+        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i * step
+        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i * step
+
+    index_i = tabl.shape[0] - 2
+    index_j = 1
+    tabl[index_i + 1, index_j - 1] = 0
+
+    while time_service[0][0] + time_service[2][0] + orientation <= K:
+        while time_service[0][0] + time_service[2][0] + orientation <= K:
+            pi1 = lamb[0]*(time_service[0][0] + time_service[1]
+                           [0] + time_service[2][0] + time_service[3][0]) - time_service[0][1]*time_service[0][0] <= 0
+            pi2 = lamb[1]*(time_service[0][0] + time_service[1]
+                           [0] + time_service[2][0] + time_service[3][0]) - time_service[2][1]*time_service[2][0] <= 0
+            res = pi1 and pi2
+            tabl[index_i, index_j] = 1 if res else -1
+            time_service[0][0] += step
+            index_i -= 1
+            if res == 0:
+                break
+        time_service[0][0] = t1
+        index_i = tabl.shape[0] - 2
+        index_j += 1
+        time_service[2][0] += step
+
+    time_service[2][0] = t3
+
+    pd.DataFrame(tabl).to_csv(
+        f"{path}//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
+
+
 def wrapper(thread_id: int):
     lamb = [0.1 * (thread_id + 1), 0.1]
     r = [0.0, 0.0]

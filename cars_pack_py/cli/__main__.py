@@ -5,7 +5,7 @@ from . import utils
 from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 
-lamb = [0.2, 0.2]
+lamb = [0.1, 0.3]
 r = [0, 0]
 g = [0, 0]
 time_service = [[5, 1], [3], [5, 1], [3]]

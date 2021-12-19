@@ -12,10 +12,10 @@ class Flow():
         self.y2 += Yi ** 2
         self.count += count
 
-    def add_cars(self, cars_: list) -> None:
+    def add_cars(self, cars_: list, last_time: float) -> None:
         for car in cars_:
             self.cars.append(car + self.last_time)
-        self.last_time = self.cars[-1]
+        self.last_time += last_time
         # self.cars.sort()
 
     def get_gamma(self) -> float:
