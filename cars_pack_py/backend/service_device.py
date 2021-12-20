@@ -147,15 +147,11 @@ class ServiceDevice():
             current_flow = flows[0] if iter == 0 else flows[1]
 
             if iter == 1:
-                temp = CarFlow(self.lamb[0], time_pi1,
-                               self.r[0], self.g[0])
-                flows[0].add_cars(temp.create_flow(mode=True), temp.get_time())
+                flows[0].add_cars(time_pi1)
                 if flows[0].get_queue(start_time) >= MAX_QUEUE:
                     isQueue = True
             elif iter == 3:
-                temp = CarFlow(self.lamb[1], time_pi2,
-                               self.r[1], self.g[1])
-                flows[1].add_cars(temp.create_flow(mode=True), temp.get_time())
+                flows[1].add_cars(time_pi2)
                 if flows[1].get_queue(start_time) >= MAX_QUEUE:
                     isQueue = True
 

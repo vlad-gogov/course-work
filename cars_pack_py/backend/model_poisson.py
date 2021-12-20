@@ -8,7 +8,7 @@ from . import consts
 class ModelPoisson(Model):
     def __init__(self, lamb=0, time=0) -> None:
         super().__init__()
-        if not (0 <= lamb <= 1 ):
+        if not (0 <= lamb <= 1):
             raise ValueError()
         self.lamb = lamb
         self.time = time
@@ -20,8 +20,6 @@ class ModelPoisson(Model):
         count = 0
         a = self.lamb * self.time
         p = random.uniform(0, 1 - consts.EPSILON) * math.exp(a)
-        if abs(1 - p) <= consts.EPSILON:
-            return 0
         l = 1
         F = l
         while F <= p:

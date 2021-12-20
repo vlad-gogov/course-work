@@ -217,9 +217,9 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
     while time_service[0][0] + time_service[2][0] + orientation <= K:
         while time_service[0][0] + time_service[2][0] + orientation <= K:
             pi1 = lamb[0]*(time_service[0][0] + time_service[1]
-                           [0] + time_service[2][0] + time_service[3][0]) - time_service[0][1]*time_service[0][0] <= 0
+                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[0][1]*time_service[0][0] <= 0
             pi2 = lamb[1]*(time_service[0][0] + time_service[1]
-                           [0] + time_service[2][0] + time_service[3][0]) - time_service[2][1]*time_service[2][0] <= 0
+                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[2][1]*time_service[2][0] <= 0
             res = pi1 and pi2
             tabl[index_i, index_j] = 1 if res else -1
             time_service[0][0] += step

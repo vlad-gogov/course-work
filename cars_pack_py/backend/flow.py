@@ -1,8 +1,16 @@
 
+from backend.car_flow import CarFlow
+
+
 class Flow():
-    def __init__(self) -> None:
+    def __init__(self, lamb: float, r: float, g: float) -> None:
+        if not (0 <= lamb <= 1 and 0 <= r <= 1 and 0 <= g <= 1):
+            raise ValueError()
+        self.lamb = lamb
+        self.r = r
+        self.g = g
         self.cars = []
-        self.y = 0  # Времена пребываний машин в системе
+        self.y = 0  # Сумма времен пребываний машин в системе
         self.y2 = 0  # Квадраты времен пребываний машин в системе
         self.count = 0  # Число обслужанных машин
         self.last_time = 0
@@ -12,10 +20,12 @@ class Flow():
         self.y2 += Yi ** 2
         self.count += count
 
-    def add_cars(self, cars_: list, last_time: float) -> None:
+    def add_cars(self, generation_interval: float) -> None:
+        car_flow = CarFlow(self.lamb, generation_interval, self.r. self.g)
+        cars_ = car_flow.create_flow(True)
         for car in cars_:
             self.cars.append(car + self.last_time)
-        self.last_time += last_time
+        self.last_time += car_flow.get_time()
         # self.cars.sort()
 
     def get_gamma(self) -> float:
