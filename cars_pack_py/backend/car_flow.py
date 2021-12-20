@@ -42,12 +42,10 @@ class CarFlow:
     #    pack.sort()
     #    return pack
 
-    def create_flow(self, mode: bool = False) -> list:
+    def create_flow(self, mode: bool = False) -> numpy.ndarray:
         # Slow cars
         slow_cars = self._create_cars_slow()
-        # self._check_distance_pack(slow_cars)
         flow_cars = [[car] for car in slow_cars]
-        print(flow_cars)
         count_pack = len(slow_cars)
 
         # Fast cars

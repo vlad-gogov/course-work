@@ -1,5 +1,5 @@
 
-from backend.car_flow import CarFlow
+from .car_flow import CarFlow
 
 
 class Flow():
@@ -21,12 +21,11 @@ class Flow():
         self.count += count
 
     def add_cars(self, generation_interval: float) -> None:
-        car_flow = CarFlow(self.lamb, generation_interval, self.r. self.g)
+        car_flow = CarFlow(self.lamb, generation_interval, self.r, self.g)
         cars_ = car_flow.create_flow(True)
         for car in cars_:
             self.cars.append(car + self.last_time)
         self.last_time += car_flow.get_time()
-        # self.cars.sort()
 
     def get_gamma(self) -> float:
         if self.count <= 0:
