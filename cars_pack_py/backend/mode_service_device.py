@@ -31,6 +31,7 @@ class ModeServiceDevice(ModeService):
             if t <= start_time + new_time_work:
                 if flow_cars.cars[0] < start_time + new_time_work - self.time_service:
                     debug_log(i, ":", flow_cars.cars)
+                    debug_log("Time:", t)
                     flow_cars.add_gamma(max((t - flow_cars.cars[0]), 0))
                     debug_log("Время ожидания заявки", flow_cars.cars[0], ":", max(
                         (t - flow_cars.cars[0]), 0))

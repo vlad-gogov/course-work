@@ -14,15 +14,15 @@ class CarFlow:
 
     def _create_cars_slow(self) -> numpy.ndarray:
         all_count_requests = 0
-        full_time = 0
         lambda_b = self.lamb / (1 + self.r/(1 - self.g))
-        model = ModelPoisson(lambda_b, self.time)
-        all_count_requests += model.count_requests()
-        full_time += self.time
-        while not model._is_correct(all_count_requests, full_time):
-            all_count_requests += model.count_requests()
-            full_time += self.time
-        self.time = full_time
+        #model = ModelPoisson(lambda_b, self.time)
+        #all_count_requests += model.count_requests()
+        #full_time += self.time
+        # while not model._is_correct(all_count_requests, full_time):
+        #    all_count_requests += model.count_requests()
+        #    full_time += self.time
+        #self.time = full_time
+        all_count_requests = numpy.random.poisson(lambda_b * self.time)
         slow_cars = numpy.random.uniform(0, 1, [all_count_requests])
         slow_cars *= self.time
 
@@ -30,17 +30,17 @@ class CarFlow:
 
         return slow_cars
 
-    # def _build_pack(self, average_pack_length: float, time_start: float, count_fast_cars: int):
-    #    pack = []
-    #    for _ in range(count_fast_cars):
-    #        time_moment = time_start + \
-    #            random.uniform(0, 1 - consts.EPSILON) * average_pack_length
-    #        while time_moment > self.time:
-    #            time_moment = time_start + \
-    #                random.uniform(0, 1 - consts.EPSILON) * average_pack_length
-    #        pack.append(time_moment)
-    #    pack.sort()
-    #    return pack
+    def _build_pack(self, average_pack_length: float, time_start: float, count_fast_cars: int):
+        pack = []
+        for _ in range(count_fast_cars):
+            time_moment = time_start + \
+                numpy.random.uniform(0, 1) * average_pack_length
+            while time_moment > self.time:
+                time_moment = time_start + \
+                    numpy.random.uniform(0, 1) * average_pack_length
+            pack.append(time_moment)
+        pack.sort()
+        return pack
 
     def create_flow(self, mode: bool = False) -> numpy.ndarray:
         # Slow cars

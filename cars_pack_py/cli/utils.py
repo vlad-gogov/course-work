@@ -95,7 +95,6 @@ def thread_function(thread_id: int):
 
 
 def Test():
-
     with ThreadPoolExecutor(max_workers=4) as executor:
         executor.map(thread_function, range(9))
 
@@ -152,8 +151,12 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                       ", T3 =",  time_service[2][0])
             b = count_serviced_cars
             sd = ServiceDevice(lamb, r, g, time_service)
-            prev = sd.Start_Seq(b)
             over_queue = False
+            prev = sd.Start_Seq(b)
+            if prev[0] == -1 or prev[2] == -1:
+                tabl[index_i, index_j] = -1
+                over_queue = True
+                break
             while final:
                 result = sd.Start_Seq(b)
                 debug_log("Count cars:", b)

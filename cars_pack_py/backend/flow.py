@@ -1,4 +1,3 @@
-
 from .car_flow import CarFlow
 
 
@@ -13,19 +12,20 @@ class Flow():
         self.y = 0  # Сумма времен пребываний машин в системе
         self.y2 = 0  # Квадраты времен пребываний машин в системе
         self.count = 0  # Число обслужанных машин
-        self.last_time = 0
 
     def add_gamma(self, Yi: float, count: int = 1) -> None:
         self.y += Yi
         self.y2 += Yi ** 2
         self.count += count
 
-    def add_cars(self, generation_interval: float) -> None:
+    def generation_cars(self, generation_interval: float, start_time: float = 0) -> None:
         car_flow = CarFlow(self.lamb, generation_interval, self.r, self.g)
         cars_ = car_flow.create_flow(True)
         for car in cars_:
-            self.cars.append(car + self.last_time)
-        self.last_time += car_flow.get_time()
+            self.cars.append(car + start_time)
+
+    def add_cars(self, car: float) -> None:
+        self.cars.append(car)
 
     def get_gamma(self) -> float:
         if self.count <= 0:
