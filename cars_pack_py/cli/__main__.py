@@ -11,7 +11,7 @@ r = [0.1, 0.1]
 g = [0.0, 0.0]
 time_service = [[5, 1], [3], [5, 1], [3]]
 count_cars = 5000
-K = 80
+K = 79
 
 utils.get_grid(lamb, r, g, time_service, count_cars, K, 5,
                "Loop", "cars_pack_py//results//Bartlet//Loop")
