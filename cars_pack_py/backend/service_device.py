@@ -8,7 +8,7 @@ from .utils import debug_log
 import math
 import random
 
-MAX_QUEUE = 35
+MAX_QUEUE = 40
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -134,9 +134,7 @@ class ServiceDevice():
 
         current_flow.generation_cars(time_Gamma_2, start_time)
         while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
-            # while start_time <= time:
             debug_log("Г (", iter + 1, ")", sep="")
-            #debug_log(flows[0].cadrs, "\n", flows[1].cars)
             debug_log("Время до обслуживания: ", start_time, "\n")
 
             current_flow = flows[0] if iter == ModesSeq.Gamma_1 else flows[1]
