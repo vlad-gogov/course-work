@@ -54,9 +54,7 @@ class ServiceDevice():
         current_flow.generation_cars(time_Gamma_2)
 
         while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
-            # while start_time <= time:
             debug_log("Г (", iter + 1, ")", sep="")
-            debug_log(flows[0].cars, "\n", flows[1].cars)
             debug_log("Время до обслуживания: ", start_time, "\n")
 
             current_flow = flows[0] if iter == 0 else flows[1]
