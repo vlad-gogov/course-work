@@ -12,17 +12,20 @@ class Flow():
         self.y = 0  # Сумма времен пребываний машин в системе
         self.y2 = 0  # Квадраты времен пребываний машин в системе
         self.count = 0  # Число обслужанных машин
+        self.queue = 0  # Очередь по потоку
 
     def add_gamma(self, Yi: float, count: int = 1) -> None:
         self.y += Yi
         self.y2 += Yi ** 2
         self.count += count
+        self.queue -= count
 
     def generation_cars(self, generation_interval: float, start_time: float = 0) -> None:
         car_flow = CarFlow(self.lamb, generation_interval, self.r, self.g)
         cars_ = car_flow.create_flow(True)
         for car in cars_:
             self.cars.append(car + start_time)
+        self.queue += len(cars_)
 
     def add_cars(self, car: float) -> None:
         self.cars.append(car)
@@ -44,11 +47,11 @@ class Flow():
         self.count = 0
         self.cars.clear()
 
-    def get_queue(self, time: float):
-        result = 0
-        for i in range(len(self.cars)):
-            if self.cars[i] <= time:
-                result += 1
-            else:
-                break
-        return result
+    # def get_queue(self, time: float):
+    #     result = 0
+    #     for i in range(len(self.cars)):
+    #         if self.cars[i] <= time:
+    #             result += 1
+    #         else:
+    #             break
+    #     return result

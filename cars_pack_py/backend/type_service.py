@@ -7,7 +7,15 @@ class Type(Enum):
     PREPARE_MODE = 2
     DETECTOR_MODE = 3
 
-class Modes(IntEnum):
+
+class ModesSeq(IntEnum):
+    Gamma_1 = 0
+    Gamma_2 = 1
+    Gamma_3 = 2
+    Gamma_4 = 3
+
+
+class ModesG5(IntEnum):
     Gamma_1 = 0
     Gamma_2 = 1
     Gamma_3 = 2

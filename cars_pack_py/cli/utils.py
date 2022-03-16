@@ -152,13 +152,13 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             b = count_serviced_cars
             sd = ServiceDevice(lamb, r, g, time_service)
             over_queue = False
-            prev = sd.Start_G5(b)
+            prev = sd.Start_Seq(b)
             if prev[0] == -1 or prev[2] == -1:
                 tabl[index_i, index_j] = -1
                 over_queue = True
                 break
             while final:
-                result = sd.Start_G5(b)
+                result = sd.Start_Seq(b)
                 debug_log("Count cars:", b)
                 debug_log(prev)
                 debug_log(result)
