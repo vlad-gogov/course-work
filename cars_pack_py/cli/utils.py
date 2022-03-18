@@ -6,11 +6,12 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
+from .type_crossroads import TypeCrossroads
 
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
-DEBUG = True
+DEBUG = False
 
 
 def debug_log(*args, **kwargs):
@@ -47,7 +48,24 @@ def combine_csv():
                         index=False, encoding='utf-8')
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
+def get_grid(type_crossroads: TypeCrossroads, lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
+
+    name_file = ""
+    name_grid = ""
+
+    if type_crossroads == TypeCrossroads.LOOP:
+        path += "//Loop"
+        name_grid = "Loop"
+    elif type_crossroads == TypeCrossroads.G5:
+        path += "//G5"
+        name_grid = "G5"
+
+    if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
+        path += "//Puasson"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}"
+    else:
+        path += "//Bartlett"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}"
 
     sum = 0
     orientation = 0
@@ -87,13 +105,21 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             b = count_serviced_cars
             sd = ServiceDevice(lamb, r, g, time_service)
             over_queue = False
-            prev = sd.Start_Seq(b)
+            prev = []
+            if type_crossroads == TypeCrossroads.LOOP:
+                prev = sd.Start_Seq(b)
+            elif type_crossroads == TypeCrossroads.LOOP:
+                prev = sd.Start_G5(b)
             if prev[0] == -1 or prev[2] == -1:
                 tabl[index_i, index_j] = -1
                 over_queue = True
                 break
             while final:
-                result = sd.Start_Seq(b)
+                result = []
+                if type_crossroads == TypeCrossroads.LOOP:
+                    result = sd.Start_Seq(b)
+                elif type_crossroads == TypeCrossroads.LOOP:
+                    result = sd.Start_G5(b)
                 debug_log("Count cars:", b)
                 debug_log(prev)
                 debug_log(result)
@@ -122,7 +148,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     time_service[2][0] = t3
 
     pd.DataFrame(tabl).to_csv(
-        f"{path}//{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}.csv", index=False)
+        f"{path}//{name_file}.csv", index=False)
 
 
 def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
@@ -194,13 +220,13 @@ def wrapper(thread_id: int):
         lamb[0] += 0.1
 
 
-def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
+def while_param(type_crossroads: TypeCrossroads, lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
     while(lamb[0] <= 0.5):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
-            get_grid(lamb, r, g, current_time,
-                     count_serviced_cars, K, step, name_grid, path)
-            print("Progress: ", lamb[0], lamb[1])
+            get_grid(type_crossroads, lamb, r, g, current_time,
+                     count_serviced_cars, K, step, path)
+            print(f"Progress: {lamb[0]:.{1}} {lamb[1]:.{1}}")
             lamb[1] += 0.1
         lamb[1] = 0.1
         lamb[0] += 0.1

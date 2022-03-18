@@ -1,3 +1,4 @@
+from urllib3 import Retry
 from . import consts
 from .model_poisson import ModelPoisson
 from .model_bartlet import ModelBartlet
@@ -48,6 +49,9 @@ class CarFlow:
         flow_cars = [[car] for car in slow_cars]
         count_pack = len(slow_cars)
 
+        if count_pack == 0:
+            return flow_cars
+
         # Fast cars
         c = 2
         model_bartlet = ModelBartlet(self.r, self.g)
@@ -55,7 +59,7 @@ class CarFlow:
         average_pack_length = 0
         expected_value = model_bartlet.get_expected_value()
         expected_value_stat = expected_value
-        lambda_bartlet = self.lamb * expected_value
+        lambda_bartlet = self.lamb / expected_value
         lambda_bartlet_stat = lambda_bartlet
 
         count_fast_car = []

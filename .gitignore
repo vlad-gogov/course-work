@@ -3,5 +3,4 @@ debug
 .vs
 build
 __pycache__
-*.csv
 .vscode
