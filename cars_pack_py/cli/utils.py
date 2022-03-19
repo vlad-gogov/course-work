@@ -11,7 +11,7 @@ from .type_crossroads import TypeCrossroads
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
-DEBUG = False
+DEBUG = True
 
 
 def debug_log(*args, **kwargs):
@@ -48,10 +48,13 @@ def combine_csv():
                         index=False, encoding='utf-8')
 
 
-def get_grid(type_crossroads: TypeCrossroads, lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
 
     name_file = ""
     name_grid = ""
+    type_crossroads = TypeCrossroads.LOOP
+    if len(time_service) == 5:
+        type_crossroads = TypeCrossroads.G5
 
     if type_crossroads == TypeCrossroads.LOOP:
         path += "//Loop"
@@ -108,7 +111,7 @@ def get_grid(type_crossroads: TypeCrossroads, lamb: list, r: list, g: list, time
             prev = []
             if type_crossroads == TypeCrossroads.LOOP:
                 prev = sd.Start_Seq(b)
-            elif type_crossroads == TypeCrossroads.LOOP:
+            elif type_crossroads == TypeCrossroads.G5:
                 prev = sd.Start_G5(b)
             if prev[0] == -1 or prev[2] == -1:
                 tabl[index_i, index_j] = -1
@@ -118,7 +121,7 @@ def get_grid(type_crossroads: TypeCrossroads, lamb: list, r: list, g: list, time
                 result = []
                 if type_crossroads == TypeCrossroads.LOOP:
                     result = sd.Start_Seq(b)
-                elif type_crossroads == TypeCrossroads.LOOP:
+                elif type_crossroads == TypeCrossroads.G5:
                     result = sd.Start_G5(b)
                 debug_log("Count cars:", b)
                 debug_log(prev)
@@ -220,11 +223,11 @@ def wrapper(thread_id: int):
         lamb[0] += 0.1
 
 
-def while_param(type_crossroads: TypeCrossroads, lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
+def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
     while(lamb[0] <= 0.5):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
-            get_grid(type_crossroads, lamb, r, g, current_time,
+            get_grid(lamb, r, g, current_time,
                      count_serviced_cars, K, step, path)
             print(f"Progress: {lamb[0]:.{1}} {lamb[1]:.{1}}")
             lamb[1] += 0.1

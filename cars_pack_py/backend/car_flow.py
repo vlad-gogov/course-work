@@ -64,9 +64,9 @@ class CarFlow:
 
         count_fast_car = []
 
-        while abs(r_stat - self.r) < 0.1 * self.r and \
-                abs(expected_value_stat - expected_value) < 0.1 * expected_value and \
-                abs(lambda_bartlet_stat - lambda_bartlet) < 0.1 * lambda_bartlet:
+        while abs(r_stat - self.r) >= 0.1 * self.r and \
+                abs(expected_value_stat - expected_value) >= 0.1 * expected_value and \
+                abs(lambda_bartlet_stat - lambda_bartlet) >= 0.1 * lambda_bartlet:
             count_fast_car.clear()
             delta_min_time = 1e10
             max_count_fast_cars = 0
