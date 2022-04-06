@@ -45,7 +45,10 @@ class ServiceDevice():
         isG5 = False
         isQueue = False
         count_G5 = 0
+
         count_all_iterations = 0
+        count_cycle = 1
+
         all_time_g5 = 0
 
         # need refactoring
@@ -61,6 +64,9 @@ class ServiceDevice():
             debug_log("Время до обслуживания: ", start_time, "\n")
 
             current_flow = flows[0] if iter == 0 else flows[1]
+
+            if iter == ModesG5.Gamma_1:
+                count_cycle += 1
 
             if iter == ModesG5.Gamma_2:
                 if flows[0].queue > 0:
@@ -110,8 +116,14 @@ class ServiceDevice():
         for flow in flows:
             result.append(flow.get_gamma())
             result.append(flow.get_dispersion())
-        print("Count G5: ", count_G5, " - All iter:", count_all_iterations)
-        print("Time G5:", all_time_g5, " - All time: ", start_time, )
+        # отношение числа срабатывания режима G5 к числу всех циклов
+        result.append(count_G5 / count_cycle)
+
+        # отношение числа срабатывания режима G5 к числу срабатывания режимов
+        result.append(count_G5 / count_all_iterations)
+
+        # среднее время простоя режима G5
+        result.append(mods[ModesG5.Gamma_5].down_time / count_G5 if count_G5 != 0 else 0)
         return result
 
     def Start_Seq(self, count_serviced_cars: int) -> list:

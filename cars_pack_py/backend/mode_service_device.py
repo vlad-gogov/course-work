@@ -1,4 +1,5 @@
 from os import times_result
+
 from .flow import Flow
 from .mode_service import ModeService
 from .type_service import Type
@@ -11,6 +12,7 @@ class ModeServiceDevice(ModeService):
         self.time_service = time_service  # Время обслуживания одной заявки
         self.max_count_service = int(self.time_work / self.time_service)
         self.mode = type
+        self.down_time = 0
 
     def service(self, flow_cars: Flow, start_time: float = 0, delta: float = 0):
         # Число потенциально обслужанных машин
@@ -61,6 +63,9 @@ class ModeServiceDevice(ModeService):
                 break
             else:
                 break
+
+        if t <= next_time:
+            self.down_time += next_time - t
 
         debug_log("Оставшиеся машины:", flow_cars.cars, "\n")
         return next_time

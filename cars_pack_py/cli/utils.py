@@ -97,6 +97,9 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     t3 = time_service[2][0]
 
     tabl_opt = create_table(t1, t3, K - sum, step)
+    tabl_frequency_cycle = create_table(t1, t3, K - sum, step)
+    tabl_frequency_all = create_table(t1, t3, K - sum, step)
+    tabl_down_time = create_table(t1, t3, K - sum, step)
 
     debug_log(tabl_opt.shape)
 
@@ -132,12 +135,18 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 debug_log(result)
                 if result[0] == -1 or result[2] == -1:
                     tabl_opt[index_i, index_j] = -1
+                    tabl_frequency_cycle[index_i, index_j] = -1
+                    tabl_frequency_all[index_i, index_j] = -1
+                    tabl_down_time[index_i, index_j] = -1
                     # over_queue = True
                     break
                 if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
                     avg = sd.get_weight_avg_gamma([result[0], result[2]])
                     debug_log("Y:", avg, "\n")
                     tabl_opt[index_i, index_j] = avg
+                    tabl_frequency_cycle[index_i, index_j] = result[4]
+                    tabl_frequency_all[index_i, index_j] = result[5]
+                    tabl_down_time[index_i, index_j] = result[6]
                     final = False
                 b += count_serviced_cars
                 prev = result
@@ -156,6 +165,13 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
     pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)
+    pd.DataFrame(tabl_frequency_cycle).to_csv(
+        f"{path}//{name_file}_frequency_cycle.csv", index=False)
+    pd.DataFrame(tabl_frequency_all).to_csv(
+        f"{path}//{name_file}_frequency_all.csv", index=False)
+    pd.DataFrame(tabl_down_time).to_csv(
+        f"{path}//{name_file}_down_time.csv", index=False)
+
 
 # Переписать
 
