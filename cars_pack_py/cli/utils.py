@@ -111,7 +111,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                       ", T3 =",  time_service[2][0])
             b = count_serviced_cars
             sd = ServiceDevice(lamb, r, g, time_service)
-            over_queue = False
+            # over_queue = False
             prev = []
             if type_crossroads == TypeCrossroads.LOOP:
                 prev = sd.Start_Seq(b)
@@ -119,8 +119,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 prev = sd.Start_G5(b)
             if prev[0] == -1 or prev[2] == -1:
                 tabl_opt[index_i, index_j] = -1
-                over_queue = True
-                break
+            #     over_queue = True
+            #     break
             while final:
                 result = []
                 if type_crossroads == TypeCrossroads.LOOP:
@@ -132,7 +132,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 debug_log(result)
                 if result[0] == -1 or result[2] == -1:
                     tabl_opt[index_i, index_j] = -1
-                    over_queue = True
+                    # over_queue = True
                     break
                 if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
                     avg = sd.get_weight_avg_gamma([result[0], result[2]])
@@ -141,10 +141,9 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                     final = False
                 b += count_serviced_cars
                 prev = result
-            if over_queue:
-                over_queue = False
-                # Выключает полный перебор
-                # break
+            # if over_queue:
+            #    over_queue = False
+            #    break
             time_service[0][0] += step
             index_i -= 1
             final = True

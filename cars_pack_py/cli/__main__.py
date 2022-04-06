@@ -9,7 +9,7 @@ from .type_crossroads import TypeCrossroads
 lamb = [0.1, 0.1]
 r = [0.0, 0.0]
 g = [0.0, 0.0]
-time_service = [[15, 3], [3], [15, 3], [3]]
+time_service = [[15, 2], [2], [15, 2], [2]]
 count_cars = 5000
 K = 100
 path = "cars_pack_py//results"

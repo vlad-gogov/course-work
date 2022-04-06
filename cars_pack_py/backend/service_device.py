@@ -8,7 +8,7 @@ from .utils import debug_log
 import math
 import random
 
-MAX_QUEUE = 100
+MAX_QUEUE = 50
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
