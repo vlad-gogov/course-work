@@ -235,8 +235,8 @@ def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced
         while(lamb[1] <= 0.6):
             lamb[0] = 0.1 * i
             current_time = time_service.copy()
-            # get_grid(lamb, r, g, current_time,
-            #         count_serviced_cars, K, step, path)
+            get_grid(lamb, r, g, current_time,
+                     count_serviced_cars, K, step, path)
             print(f"Progress: {lamb[0]:.{1}} {lamb[1]:.{1}}")
             lamb[1] += 0.1
         lamb[0] += 0.1
