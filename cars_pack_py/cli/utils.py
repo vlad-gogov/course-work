@@ -48,6 +48,16 @@ def combine_csv():
                         index=False, encoding='utf-8')
 
 
+def create_table(t1: float, t3: float, max_value: float, step: int) -> np.ndarray:
+    tabl = np.zeros((int(max_value / step) + 2, int(
+        max_value / step) + 2))
+    for i in range(tabl.shape[0] - 1):
+        tabl[tabl.shape[0] - 2 - i][0] = t1 + i * step
+        tabl[tabl.shape[0] - 1][i + 1] = t3 + i * step
+    tabl[tabl.shape[0] - 1, 0] = 0
+    return tabl
+
+
 def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
 
     name_file = ""
@@ -86,20 +96,14 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     t1 = time_service[0][0]
     t3 = time_service[2][0]
 
-    tabl = np.zeros((int((K - sum) / step) + 2, int(
-        (K - sum) / step) + 2))
+    tabl_opt = create_table(t1, t3, K - sum, step)
 
-    for i in range(tabl.shape[0] - 1):
-        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i * step
-        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i * step
-
-    debug_log(tabl.shape)
+    debug_log(tabl_opt.shape)
 
     result = np.zeros(len(lamb))
 
-    index_i = tabl.shape[0] - 2
+    index_i = tabl_opt.shape[0] - 2
     index_j = 1
-    tabl[index_i + 1, index_j - 1] = 0
 
     while time_service[0][0] + time_service[2][0] + orientation <= K:
         while time_service[0][0] + time_service[2][0] + orientation <= K:
@@ -114,7 +118,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             elif type_crossroads == TypeCrossroads.G5:
                 prev = sd.Start_G5(b)
             if prev[0] == -1 or prev[2] == -1:
-                tabl[index_i, index_j] = -1
+                tabl_opt[index_i, index_j] = -1
                 over_queue = True
                 break
             while final:
@@ -127,31 +131,34 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 debug_log(prev)
                 debug_log(result)
                 if result[0] == -1 or result[2] == -1:
-                    tabl[index_i, index_j] = -1
+                    tabl_opt[index_i, index_j] = -1
                     over_queue = True
                     break
                 if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
                     avg = sd.get_weight_avg_gamma([result[0], result[2]])
                     debug_log("Y:", avg, "\n")
-                    tabl[index_i, index_j] = avg
+                    tabl_opt[index_i, index_j] = avg
                     final = False
                 b += count_serviced_cars
                 prev = result
             if over_queue:
                 over_queue = False
-                break
+                # Выключает полный перебор
+                # break
             time_service[0][0] += step
             index_i -= 1
             final = True
         time_service[0][0] = t1
-        index_i = tabl.shape[0] - 2
+        index_i = tabl_opt.shape[0] - 2
         index_j += 1
         time_service[2][0] += step
 
     time_service[2][0] = t3
 
-    pd.DataFrame(tabl).to_csv(
+    pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)
+
+# Переписать
 
 
 def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
@@ -224,12 +231,13 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
-    while(lamb[0] <= 0.5):
-        while(lamb[1] <= 0.5):
+    for i in range(1, 7):
+        while(lamb[1] <= 0.6):
+            lamb[0] = 0.1 * i
             current_time = time_service.copy()
-            get_grid(lamb, r, g, current_time,
-                     count_serviced_cars, K, step, path)
+            # get_grid(lamb, r, g, current_time,
+            #         count_serviced_cars, K, step, path)
             print(f"Progress: {lamb[0]:.{1}} {lamb[1]:.{1}}")
             lamb[1] += 0.1
-        lamb[1] = 0.1
         lamb[0] += 0.1
+        lamb[1] = lamb[0]
