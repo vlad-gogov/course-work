@@ -49,8 +49,8 @@ def combine_csv():
 
 
 def create_table(t1: float, t3: float, max_value: float, step: int) -> np.ndarray:
-    tabl = np.zeros((int(max_value / step) + 2, int(
-        max_value / step) + 2))
+    tabl = np.full((int(max_value / step) + 1, int(
+        max_value / step) + 1), -2.0, dtype=np.float64)
     for i in range(tabl.shape[0] - 1):
         tabl[tabl.shape[0] - 2 - i][0] = t1 + i * step
         tabl[tabl.shape[0] - 1][i + 1] = t3 + i * step
@@ -96,10 +96,12 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     t1 = time_service[0][0]
     t3 = time_service[2][0]
 
-    tabl_opt = create_table(t1, t3, K - sum, step)
-    tabl_frequency_cycle = create_table(t1, t3, K - sum, step)
-    tabl_frequency_all = create_table(t1, t3, K - sum, step)
-    tabl_down_time = create_table(t1, t3, K - sum, step)
+    max_value = 80
+    tabl_opt = create_table(t1, t3, max_value, step)
+    if type_crossroads == TypeCrossroads.G5:
+        tabl_frequency_cycle = create_table(t1, t3, max_value, step)
+        average_time_G5 = create_table(t1, t3, max_value, step)
+        tabl_down_time = create_table(t1, t3, max_value, step)
 
     debug_log(tabl_opt.shape)
 
@@ -108,8 +110,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     index_i = tabl_opt.shape[0] - 2
     index_j = 1
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K:
-        while time_service[0][0] + time_service[2][0] + orientation <= K:
+    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value:
+        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
             b = count_serviced_cars
@@ -135,18 +137,20 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 debug_log(result)
                 if result[0] == -1 or result[2] == -1:
                     tabl_opt[index_i, index_j] = -1
-                    tabl_frequency_cycle[index_i, index_j] = -1
-                    tabl_frequency_all[index_i, index_j] = -1
-                    tabl_down_time[index_i, index_j] = -1
+                    if type_crossroads == TypeCrossroads.G5:
+                        tabl_frequency_cycle[index_i, index_j] = -1
+                        average_time_G5[index_i, index_j] = -1
+                        tabl_down_time[index_i, index_j] = -1
                     # over_queue = True
                     break
                 if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
                     avg = sd.get_weight_avg_gamma([result[0], result[2]])
                     debug_log("Y:", avg, "\n")
                     tabl_opt[index_i, index_j] = avg
-                    tabl_frequency_cycle[index_i, index_j] = result[4]
-                    tabl_frequency_all[index_i, index_j] = result[5]
-                    tabl_down_time[index_i, index_j] = result[6]
+                    if type_crossroads == TypeCrossroads.G5:
+                        tabl_frequency_cycle[index_i, index_j] = result[4]
+                        average_time_G5[index_i, index_j] = result[5]
+                        tabl_down_time[index_i, index_j] = result[6]
                     final = False
                 b += count_serviced_cars
                 prev = result
@@ -165,12 +169,37 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
     pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)
-    pd.DataFrame(tabl_frequency_cycle).to_csv(
-        f"{path}//{name_file}_frequency_cycle.csv", index=False)
-    pd.DataFrame(tabl_frequency_all).to_csv(
-        f"{path}//{name_file}_frequency_all.csv", index=False)
-    pd.DataFrame(tabl_down_time).to_csv(
-        f"{path}//{name_file}_down_time.csv", index=False)
+    df = pd.read_csv(f"{path}//{name_file}.csv", sep=',', dtype=np.float64)
+    df = df.replace(to_replace=-2, value='', regex=True)
+    pd.DataFrame(df).to_csv(
+        f"{path}//{name_file}.csv", index=False)
+
+    if type_crossroads == TypeCrossroads.G5:
+
+        pd.DataFrame(tabl_frequency_cycle).to_csv(
+            f"{path}//{name_file}_frequency_cycle.csv", index=False)
+        df = pd.read_csv(
+            f"{path}//{name_file}_frequency_cycle.csv", sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-2, value='', regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_frequency_cycle.csv", index=False)
+
+        pd.DataFrame(average_time_G5).to_csv(
+            f"{path}//{name_file}_average_time_G5.csv", index=False)
+        df = pd.read_csv(
+            f"{path}//{name_file}_average_time_G5.csv", sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-2, value='', regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_average_time_G5.csv", index=False)
+
+        pd.DataFrame(tabl_down_time).to_csv(
+            f"{path}//{name_file}_down_time.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}_down_time.csv",
+                         sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-2, value='',
+                        regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_down_time.csv", index=False)
 
 
 # Переписать

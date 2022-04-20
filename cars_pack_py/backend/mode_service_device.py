@@ -24,6 +24,9 @@ class ModeServiceDevice(ModeService):
         if len(flow_cars.cars) and flow_cars.cars[0] >= t:
             t = flow_cars.cars[0]
 
+        if self.mode == Type.DETECTOR_MODE:
+            self.max_count_service = int(delta / self.time_service)
+
         for i in range(self.max_count_service):
 
             if (t >= next_time):

@@ -8,7 +8,7 @@ from .utils import debug_log
 import math
 import random
 
-MAX_QUEUE = 50
+MAX_QUEUE = 100
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -46,12 +46,10 @@ class ServiceDevice():
         isQueue = False
         count_G5 = 0
 
-        count_all_iterations = 0
-        count_cycle = 1
+        count_cycle = 0
 
         all_time_g5 = 0
 
-        # need refactoring
         time_for_pi2 = time_Gamma_1 + time_Gamma_2 + time_Gamma_4
         time_for_pi1_default = time_Gamma_2 + time_Gamma_3
         time_for_pi1_full = time_for_pi1_default + time_Gamma_4
@@ -63,38 +61,36 @@ class ServiceDevice():
             debug_log("Г (", iter + 1, ")", sep="")
             debug_log("Время до обслуживания: ", start_time, "\n")
 
-            current_flow = flows[0] if iter == 0 else flows[1]
-
-            if iter == ModesG5.Gamma_1:
-                count_cycle += 1
+            current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
 
             if iter == ModesG5.Gamma_2:
+                count_cycle += 1
                 if flows[0].queue > 0:
                     isG5 = False
                     flows[0].generation_cars(
                         time_for_pi1_full, start_time)
                 else:
-                    isG5 = True
                     flows[0].generation_cars(time_for_pi1_default, start_time)
-                if flows[0].queue >= MAX_QUEUE:
-                    isQueue = True
-            elif iter == ModesG5.Gamma_5:
-                flows[1].generation_cars(time_for_pi2, start_time)
-                if flows[0].queue > 0:
-                    flows[0].generation_cars(
-                        time_Gamma_4, start_time)
-                    isG5 = False
-                else:
-                    isG5 = True
-                    p = random.uniform(0, 1 - consts.EPSILON)
-                    lambda_b = self.lamb[0] / (1 + self.r[0]/(1 - self.g[0]))
-                    delta = -math.log(1-p)/lambda_b
-                    flows[0].add_cars(delta + start_time)
-                if flows[1].queue >= MAX_QUEUE:
-                    isQueue = True
+                    if flows[0].queue > 0:
+                        isG5 = False
+                    else:
+                        isG5 = True
+                        # Генерирование первой заявки по 1-ому потоку
+                        p = random.uniform(0, 1 - consts.EPSILON)
+                        lambda_b = self.lamb[0] / \
+                            (1 + self.r[0]/(1 - self.g[0]))
+                        delta = -math.log(1-p)/lambda_b
+                        flows[0].add_cars(delta + start_time)
+
             elif iter == ModesG5.Gamma_4:
                 if isG5:
                     flows[0].generation_cars(time_Gamma_4, start_time)
+                    isG5 = False
+                flows[1].generation_cars(time_for_pi2, start_time)
+
+            for i in range(count_flow):
+                if flows[i].queue >= MAX_QUEUE:
+                    return [-1 for _ in range(2 * len(flows))]
 
             if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
                 all_time_g5 += delta
@@ -102,28 +98,24 @@ class ServiceDevice():
                     current_flow, start_time, delta)
                 delta = 0
                 count_G5 += 1
-                isG5 = False
             else:
                 start_time = mods[iter].service(current_flow, start_time)
 
-            count_all_iterations += 1
-
             iter = (iter + 1) % (len(mods))
-            if isQueue:
-                return [-1 for _ in range(2 * len(flows))]
 
         result = []
         for flow in flows:
             result.append(flow.get_gamma())
             result.append(flow.get_dispersion())
-        # отношение числа срабатывания режима G5 к числу всех циклов
+        # отношение числа срабатывания режима Г5 к числу всех циклов
         result.append(count_G5 / count_cycle)
 
-        # отношение числа срабатывания режима G5 к числу срабатывания режимов
-        result.append(count_G5 / count_all_iterations)
+        # среднее время пребывания в режиме Г5
+        result.append(all_time_g5 / count_G5)
 
         # среднее время простоя режима G5
-        result.append(mods[ModesG5.Gamma_5].down_time / count_G5 if count_G5 != 0 else 0)
+        result.append(mods[ModesG5.Gamma_5].down_time /
+                      count_G5 if count_G5 != 0 else 0)
         return result
 
     def Start_Seq(self, count_serviced_cars: int) -> list:

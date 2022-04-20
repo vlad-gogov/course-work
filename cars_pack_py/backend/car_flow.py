@@ -1,3 +1,5 @@
+from traceback import print_tb
+from matplotlib.pyplot import bar_label
 from urllib3 import Retry
 from . import consts
 from .model_poisson import ModelPoisson
@@ -55,41 +57,43 @@ class CarFlow:
         # Fast cars
         c = 2
         model_bartlet = ModelBartlet(self.r, self.g)
-        r_stat = self.r
+        r_stat = 0
         average_pack_length = 0
         expected_value = model_bartlet.get_expected_value()
-        expected_value_stat = expected_value
+        expected_value_stat = 0
         lambda_bartlet = self.lamb / expected_value
-        lambda_bartlet_stat = lambda_bartlet
+        lambda_bartlet_stat = 0
 
         count_fast_car = []
 
-        while abs(r_stat - self.r) >= 0.1 * self.r and \
-                abs(expected_value_stat - expected_value) >= 0.1 * expected_value and \
-                abs(lambda_bartlet_stat - lambda_bartlet) >= 0.1 * lambda_bartlet:
-            count_fast_car.clear()
-            delta_min_time = 1e10
-            max_count_fast_cars = 0
-            pack_fast = 0
+        # while abs(r_stat - self.r) >= 0.1 * self.r or \
+        #         abs(expected_value_stat - expected_value) >= 0.1 * expected_value or \
+        #         abs(lambda_bartlet_stat - lambda_bartlet) >= 0.1 * lambda_bartlet:
+        # count_fast_car.clear()
+        delta_min_time = 1e10
+        max_count_fast_cars = 0
+        pack_fast = 0
 
-            for _ in range(count_pack):
-                count_fast_car.append(model_bartlet.count_requests())
-                temp = count_fast_car[-1]
-                if temp > 0:
-                    pack_fast += 1
-                if max_count_fast_cars < temp:
-                    max_count_fast_cars = temp
-            if len(flow_cars) >= 2:
-                delta_min_time = min(flow_cars[i][0] - flow_cars[i - 1][0]
-                                     for i in range(1, count_pack))
-            else:
-                delta_min_time = 0
+        for _ in range(count_pack):
+            count_fast_car.append(model_bartlet.count_requests())
+            temp = count_fast_car[-1]
+            if temp > 0:
+                pack_fast += 1
+            if max_count_fast_cars < temp:
+                max_count_fast_cars = temp
+        if len(flow_cars) >= 2:
+            delta_min_time = min(flow_cars[i][0] - flow_cars[i - 1][0]
+                                 for i in range(1, count_pack))
+        else:
+            delta_min_time = 0
 
-            average_pack_length = delta_min_time / (max_count_fast_cars + c)
-            r_stat = pack_fast / count_pack
-            expected_value_stat = model_bartlet.get_expected_value_custom(
-                r_stat, average_pack_length)
-            lambda_bartlet_stat = self.lamb * expected_value_stat
+        average_pack_length = delta_min_time / (max_count_fast_cars + c)
+        # if (average_pack_length == 0):
+        #     break
+        # r_stat = pack_fast / count_pack
+        # expected_value_stat = model_bartlet.get_expected_value_custom(
+        #     r_stat, average_pack_length)
+        # lambda_bartlet_stat = self.lamb * expected_value_stat
 
         if mode:
             flow_cars = [item for sublist in flow_cars for item in sublist]
