@@ -18,12 +18,12 @@ class CarFlow:
     def _create_cars_slow(self) -> numpy.ndarray:
         all_count_requests = 0
         lambda_b = self.lamb / (1 + self.r/(1 - self.g))
-        # model = ModelPoisson(lambda_b, self.time)
+        model = ModelPoisson(lambda_b, self.time)
         # all_count_requests += model.count_requests()
         # full_time += self.time
         # while not model._is_correct(all_count_requests, full_time):
-        #    all_count_requests += model.count_requests()
-        #    full_time += self.time
+        #     all_count_requests = model.count_requests()
+        #     full_time += self.time
         # self.time = full_time
         all_count_requests = numpy.random.poisson(lambda_b * self.time)
         slow_cars = numpy.random.uniform(0, 1, [all_count_requests])
@@ -48,13 +48,14 @@ class CarFlow:
     def create_flow(self, mode: bool = False) -> numpy.ndarray:
         # Slow cars
         slow_cars = self._create_cars_slow()
-        flow_cars = [[car] for car in slow_cars]
         count_pack = len(slow_cars)
 
-        if count_pack == 0:
-            return flow_cars
+        if self.r == 0 or count_pack == 0:
+            return slow_cars
 
         # Fast cars
+        flow_cars = [[car] for car in slow_cars]
+
         c = 2
         model_bartlet = ModelBartlet(self.r, self.g)
         r_stat = 0
@@ -69,7 +70,7 @@ class CarFlow:
         # while abs(r_stat - self.r) >= 0.1 * self.r or \
         #         abs(expected_value_stat - expected_value) >= 0.1 * expected_value or \
         #         abs(lambda_bartlet_stat - lambda_bartlet) >= 0.1 * lambda_bartlet:
-        # count_fast_car.clear()
+        #     count_fast_car.clear()
         delta_min_time = 1e10
         max_count_fast_cars = 0
         pack_fast = 0
@@ -94,6 +95,13 @@ class CarFlow:
         # expected_value_stat = model_bartlet.get_expected_value_custom(
         #     r_stat, average_pack_length)
         # lambda_bartlet_stat = self.lamb * expected_value_stat
+
+        if len(count_fast_car):
+            for count_fast, flow in zip(count_fast_car, flow_cars):
+                if count_fast == 0:
+                    continue
+                flow.extend(self._build_pack(
+                    average_pack_length, flow[0], count_fast))
 
         if mode:
             flow_cars = [item for sublist in flow_cars for item in sublist]

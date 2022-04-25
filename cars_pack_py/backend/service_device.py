@@ -8,7 +8,7 @@ from .utils import debug_log
 import math
 import random
 
-MAX_QUEUE = 100
+MAX_QUEUE = 50
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -43,7 +43,6 @@ class ServiceDevice():
         delta = 0
         current_flow = flows[1]
         isG5 = False
-        isQueue = False
         count_G5 = 0
 
         count_cycle = 0
@@ -54,8 +53,12 @@ class ServiceDevice():
         time_for_pi1_default = time_Gamma_2 + time_Gamma_3
         time_for_pi1_full = time_for_pi1_default + time_Gamma_4
 
+        isGenPi1Default = False
+
+        max_q = [0, 0]
+
         start_time = 0
-        current_flow.generation_cars(time_for_pi2, start_time)
+        flows[1].generation_cars(time_for_pi2, start_time)
         start_time = time_for_pi2
         while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
             debug_log("Г (", iter + 1, ")", sep="")
@@ -71,6 +74,7 @@ class ServiceDevice():
                         time_for_pi1_full, start_time)
                 else:
                     flows[0].generation_cars(time_for_pi1_default, start_time)
+                    isGenPi1Default = True
                     if flows[0].queue > 0:
                         isG5 = False
                     else:
@@ -83,13 +87,17 @@ class ServiceDevice():
                         flows[0].add_cars(delta + start_time)
 
             elif iter == ModesG5.Gamma_4:
-                if isG5:
+                if isG5 or isGenPi1Default:
                     flows[0].generation_cars(time_Gamma_4, start_time)
                     isG5 = False
+                    isGenPi1Default = False
                 flows[1].generation_cars(time_for_pi2, start_time)
 
             for i in range(count_flow):
+                if flows[i].queue >= max_q[i]:
+                    max_q[i] = flows[i].queue
                 if flows[i].queue >= MAX_QUEUE:
+                    print("Max queue", max_q)
                     return [-1 for _ in range(2 * len(flows))]
 
             if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
@@ -116,6 +124,7 @@ class ServiceDevice():
         # среднее время простоя режима G5
         result.append(mods[ModesG5.Gamma_5].down_time /
                       count_G5 if count_G5 != 0 else 0)
+        print("Max queue", max_q)
         return result
 
     def Start_Seq(self, count_serviced_cars: int) -> list:

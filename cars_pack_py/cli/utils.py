@@ -58,7 +58,7 @@ def create_table(t1: float, t3: float, max_value: float, step: int) -> np.ndarra
     return tabl
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
 
     name_file = ""
     name_grid = ""
@@ -96,7 +96,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     t1 = time_service[0][0]
     t3 = time_service[2][0]
 
-    max_value = 80
     tabl_opt = create_table(t1, t3, max_value, step)
     if type_crossroads == TypeCrossroads.G5:
         tabl_frequency_cycle = create_table(t1, t3, max_value, step)
@@ -152,7 +151,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                         average_time_G5[index_i, index_j] = result[5]
                         tabl_down_time[index_i, index_j] = result[6]
                     final = False
-                b += count_serviced_cars
+                b += count_serviced_cars * 2
                 prev = result
             # if over_queue:
             #    over_queue = False
@@ -275,8 +274,8 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
-    for i in range(1, 7):
-        while(lamb[1] <= 0.6):
+    for i in range(1, 5):
+        while(lamb[1] <= 0.5):
             lamb[0] = 0.1 * i
             current_time = time_service.copy()
             get_grid(lamb, r, g, current_time,
