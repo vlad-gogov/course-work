@@ -20,17 +20,22 @@ class CarFlow:
         lambda_b = self.lamb / (1 + self.r/(1 - self.g))
         model = ModelPoisson(lambda_b, self.time)
         # all_count_requests += model.count_requests()
-        # full_time += self.time
+        # full_time = self.time
         # while not model._is_correct(all_count_requests, full_time):
-        #     all_count_requests = model.count_requests()
+        #     all_count_requests += model.count_requests()
         #     full_time += self.time
         # self.time = full_time
         all_count_requests = numpy.random.poisson(lambda_b * self.time)
         slow_cars = numpy.random.uniform(0, 1, [all_count_requests])
         slow_cars *= self.time
-
         slow_cars = numpy.sort(slow_cars)
 
+        # index = 0
+        # for car in slow_cars:
+        #     if car <= self.time:
+        #         index += 1
+        #     else:
+        #         break
         return slow_cars
 
     def _build_pack(self, average_pack_length: float, time_start: float, count_fast_cars: int):
@@ -86,7 +91,7 @@ class CarFlow:
             delta_min_time = min(flow_cars[i][0] - flow_cars[i - 1][0]
                                  for i in range(1, count_pack))
         else:
-            delta_min_time = 0
+            delta_min_time = self.time - flow_cars[0][0]
 
         average_pack_length = delta_min_time / (max_count_fast_cars + c)
         # if (average_pack_length == 0):

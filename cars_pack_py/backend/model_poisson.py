@@ -14,6 +14,8 @@ class ModelPoisson(Model):
         self.time = time
 
     def _is_correct(self, count_requests: int, time: float) -> bool:
+        # print("|", count_requests, "/", time,
+        #       "-", self.lamb, "|", "<", "0.1 *", self.lamb)
         return abs(count_requests / time - self.lamb) < 0.1 * self.lamb
 
     def count_requests(self) -> int:

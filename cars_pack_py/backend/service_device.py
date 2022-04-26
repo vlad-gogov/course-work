@@ -151,6 +151,7 @@ class ServiceDevice():
         time_for_pi1 = time_Gamma_2 + time_Gamma_3 + time_Gamma_4
         time_for_pi2 = time_Gamma_1 + time_Gamma_2 + time_Gamma_4
 
+        max_q = [0, 0]
         start_time = 0
         current_flow.generation_cars(time_for_pi2, start_time)
         start_time = time_for_pi2
@@ -172,7 +173,13 @@ class ServiceDevice():
             start_time = mods[iter].service(current_flow, start_time)
 
             iter = (iter + 1) % (len(mods))
+
+            for i in range(count_flow):
+                if flows[i].queue >= max_q[i]:
+                    max_q[i] = flows[i].queue
+
             if isQueue:
+                print(max_q)
                 return [-1 for _ in range(2 * len(flows))]
 
         result = []
