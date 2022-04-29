@@ -32,9 +32,6 @@ class ModeServiceDevice(ModeService):
             if (t >= next_time):
                 break
 
-            # if flow_cars.queue == 0:
-            #     flow_cars.generation_cars(next_time - t, t)
-
             if (not len(flow_cars.cars)):
                 break
 

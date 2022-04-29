@@ -113,16 +113,12 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
             if type_crossroads == TypeCrossroads.LOOP:
                 result = sd.Start_Seq(count_serviced_cars)
-                if result[0] == -1 or result[2] == -1:
-                    tabl_opt[index_i, index_j] = -1
                 avg = sd.get_weight_avg_gamma([result[0], result[2]])
                 debug_log("Y:", avg)
                 tabl_opt[index_i, index_j] = avg
 
             elif type_crossroads == TypeCrossroads.G5:
                 result = sd.Start_G5(count_serviced_cars)
-                if result[0] == -1 or result[2] == -1:
-                    tabl_opt[index_i, index_j] = -1
                 avg = sd.get_weight_avg_gamma([result[0], result[2]])
                 debug_log("Y:", avg)
                 tabl_opt[index_i, index_j] = avg
