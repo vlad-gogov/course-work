@@ -8,16 +8,16 @@ from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 
-lamb = [0.4, 0.5]
+lamb = [0.1, 0.3]
 r = [0.0, 0.0]
 g = [0.0, 0.0]
-time_service = [[20, 2], [2], [20, 2], [2]]
+time_service = [[5, 2], [2], [5, 2], [2]]
 #time_service = [[5, 2], [2], [5, 2], [0, 2], [2]]
 count_cars = 5000
 K = 130
 path = "cars_pack_py//results"
 step = 2
-max_value = 30
+max_value = 36
 
 #utils.while_param(lamb, r, g, time_service, count_cars, K, step, path)
 

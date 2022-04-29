@@ -46,12 +46,3 @@ class Flow():
         self.y2 = 0
         self.count = 0
         self.cars.clear()
-
-    # def get_queue(self, time: float):
-    #     result = 0
-    #     for i in range(len(self.cars)):
-    #         if self.cars[i] <= time:
-    #             result += 1
-    #         else:
-    #             break
-    #     return result

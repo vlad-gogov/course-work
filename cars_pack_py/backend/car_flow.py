@@ -19,8 +19,8 @@ class CarFlow:
         all_count_requests = 0
         lambda_b = self.lamb / (1 + self.r/(1 - self.g))
         model = ModelPoisson(lambda_b, self.time)
-
         all_count_requests = model.count_requests()
+
         # all_count_requests = numpy.random.poisson(lambda_b * self.time)
 
         slow_cars = numpy.random.uniform(0, 1, [all_count_requests])

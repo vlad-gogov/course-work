@@ -8,9 +8,6 @@ from concurrent.futures import ThreadPoolExecutor
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 
-EPSILON_TIME = 1
-EPSILON_DISPERSION = 1
-
 DEBUG = True
 
 
@@ -49,8 +46,8 @@ def combine_csv():
 
 
 def create_table(t1: float, t3: float, max_value: float, step: int) -> np.ndarray:
-    tabl = np.full((int(max_value / step) + 1, int(
-        max_value / step) + 1), -2.0, dtype=np.float64)
+    tabl = np.full((int(max_value / step), int(
+        max_value / step)), -2.0, dtype=np.float64)
     for i in range(tabl.shape[0] - 1):
         tabl[tabl.shape[0] - 2 - i][0] = t1 + i * step
         tabl[tabl.shape[0] - 1][i + 1] = t3 + i * step
@@ -91,8 +88,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         print("Некоректное значение K")
         return
 
-    final = True
-
     t1 = time_service[0][0]
     t3 = time_service[2][0]
 
@@ -113,52 +108,31 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
-            b = count_serviced_cars
+
             sd = ServiceDevice(lamb, r, g, time_service)
-            # over_queue = False
-            prev = []
+
             if type_crossroads == TypeCrossroads.LOOP:
-                prev = sd.Start_Seq(b)
-            elif type_crossroads == TypeCrossroads.G5:
-                prev = sd.Start_G5(b)
-            if prev[0] == -1 or prev[2] == -1:
-                tabl_opt[index_i, index_j] = -1
-            #     over_queue = True
-            #     break
-            while final:
-                result = []
-                if type_crossroads == TypeCrossroads.LOOP:
-                    result = sd.Start_Seq(b)
-                elif type_crossroads == TypeCrossroads.G5:
-                    result = sd.Start_G5(b)
-                debug_log("Count cars:", b)
-                debug_log(prev)
-                debug_log(result)
+                result = sd.Start_Seq(count_serviced_cars)
                 if result[0] == -1 or result[2] == -1:
                     tabl_opt[index_i, index_j] = -1
-                    if type_crossroads == TypeCrossroads.G5:
-                        tabl_frequency_cycle[index_i, index_j] = -1
-                        average_time_G5[index_i, index_j] = -1
-                        tabl_down_time[index_i, index_j] = -1
-                    # over_queue = True
-                    break
-                if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
-                    avg = sd.get_weight_avg_gamma([result[0], result[2]])
-                    debug_log("Y:", avg, "\n")
-                    tabl_opt[index_i, index_j] = avg
-                    if type_crossroads == TypeCrossroads.G5:
-                        tabl_frequency_cycle[index_i, index_j] = result[4]
-                        average_time_G5[index_i, index_j] = result[5]
-                        tabl_down_time[index_i, index_j] = result[6]
-                    final = False
-                b += count_serviced_cars * 2
-                prev = result
-            # if over_queue:
-            #    over_queue = False
-            #    break
+                avg = sd.get_weight_avg_gamma([result[0], result[2]])
+                debug_log("Y:", avg)
+                tabl_opt[index_i, index_j] = avg
+
+            elif type_crossroads == TypeCrossroads.G5:
+                result = sd.Start_G5(count_serviced_cars)
+                if result[0] == -1 or result[2] == -1:
+                    tabl_opt[index_i, index_j] = -1
+                avg = sd.get_weight_avg_gamma([result[0], result[2]])
+                debug_log("Y:", avg)
+                tabl_opt[index_i, index_j] = avg
+                tabl_frequency_cycle[index_i, index_j] = result[4]
+                average_time_G5[index_i, index_j] = result[5]
+                tabl_down_time[index_i, index_j] = result[6]
+            debug_log("")
+
             time_service[0][0] += step
             index_i -= 1
-            final = True
         time_service[0][0] = t1
         index_i = tabl_opt.shape[0] - 2
         index_j += 1
@@ -202,8 +176,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
 
 # Переписать
-
-
 def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
 
     sum = 0
