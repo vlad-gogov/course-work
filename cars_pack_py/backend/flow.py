@@ -29,6 +29,7 @@ class Flow():
 
     def add_cars(self, car: float) -> None:
         self.cars.append(car)
+        self.queue += 1
 
     def get_gamma(self) -> float:
         if self.count <= 0:

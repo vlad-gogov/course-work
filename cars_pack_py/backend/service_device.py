@@ -93,8 +93,7 @@ class ServiceDevice():
                 if flows[i].queue >= max_q[i]:
                     max_q[i] = flows[i].queue
                 if flows[i].queue >= MAX_QUEUE:
-                    print("Max queue", max_q)
-                    return [-1 for _ in range(2 * len(flows))]
+                    return [-1 for _ in range(4 * len(flows))]
 
             if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
                 # Генерирование первой заявки по 1-ому потоку
@@ -162,8 +161,7 @@ class ServiceDevice():
                     if flows[i].queue >= max_q[i]:
                         max_q[i] = flows[i].queue
                     if flows[i].queue >= MAX_QUEUE:
-                        print("Max queue", max_q)
-                        return [-1 for _ in range(2 * len(flows))]
+                        return [-1 for _ in range(4 * len(flows))]
 
                 if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
                     # Генерирование первой заявки по 1-ому потоку
