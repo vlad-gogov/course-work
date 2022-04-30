@@ -197,7 +197,7 @@ class ServiceDevice():
         next.append(count_G5 / count_cycle)
 
         # среднее время пребывания в режиме Г5
-        next.append(all_time_g5 / count_G5)
+        next.append(all_time_g5 / count_G5 if count_G5 != 0 else 0)
 
         # среднее время простоя режима G5
         next.append(mods[ModesG5.Gamma_5].down_time /
