@@ -190,7 +190,6 @@ class ServiceDevice():
             print("Count cars:", count_cars)
             print(prev)
             print(next)
-            print("Max queue", max_q)
 
             if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
                 finish = True

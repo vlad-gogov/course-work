@@ -46,8 +46,8 @@ def combine_csv():
 
 
 def create_table(t1: float, t3: float, max_value: float, step: int) -> np.ndarray:
-    tabl = np.full((int(max_value / step), int(
-        max_value / step)), -2.0, dtype=np.float64)
+    tabl = np.full((int(max_value / step) + 1, int(
+        max_value / step) + 1), -1.0, dtype=np.float64)
     for i in range(tabl.shape[0] - 1):
         tabl[tabl.shape[0] - 2 - i][0] = t1 + i * step
         tabl[tabl.shape[0] - 1][i + 1] = t3 + i * step
@@ -63,6 +63,9 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     if len(time_service) == 5:
         type_crossroads = TypeCrossroads.G5
 
+    t1 = time_service[0][0]
+    t3 = time_service[2][0]
+
     if type_crossroads == TypeCrossroads.LOOP:
         path += "//Loop"
         name_grid = "Loop"
@@ -72,10 +75,10 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
     if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
         path += "//Puasson"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}_{max_value}"
     else:
         path += "//Bartlett"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}_{max_value}"
 
     sum = 0
     orientation = 0
@@ -87,9 +90,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     if sum > K:
         print("Некоректное значение K")
         return
-
-    t1 = time_service[0][0]
-    t3 = time_service[2][0]
 
     tabl_opt = create_table(t1, t3, max_value, step)
     if type_crossroads == TypeCrossroads.G5:
@@ -139,7 +139,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)
     df = pd.read_csv(f"{path}//{name_file}.csv", sep=',', dtype=np.float64)
-    df = df.replace(to_replace=-2, value='', regex=True)
+    df = df.replace(to_replace=-1, value='', regex=True)
     pd.DataFrame(df).to_csv(
         f"{path}//{name_file}.csv", index=False)
 
@@ -149,7 +149,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             f"{path}//{name_file}_frequency_cycle.csv", index=False)
         df = pd.read_csv(
             f"{path}//{name_file}_frequency_cycle.csv", sep=',', dtype=np.float64)
-        df = df.replace(to_replace=-2, value='', regex=True)
+        df = df.replace(to_replace=-1, value='', regex=True)
         pd.DataFrame(df).to_csv(
             f"{path}//{name_file}_frequency_cycle.csv", index=False)
 
@@ -157,7 +157,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             f"{path}//{name_file}_average_time_G5.csv", index=False)
         df = pd.read_csv(
             f"{path}//{name_file}_average_time_G5.csv", sep=',', dtype=np.float64)
-        df = df.replace(to_replace=-2, value='', regex=True)
+        df = df.replace(to_replace=-1, value='', regex=True)
         pd.DataFrame(df).to_csv(
             f"{path}//{name_file}_average_time_G5.csv", index=False)
 
@@ -165,7 +165,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             f"{path}//{name_file}_down_time.csv", index=False)
         df = pd.read_csv(f"{path}//{name_file}_down_time.csv",
                          sep=',', dtype=np.float64)
-        df = df.replace(to_replace=-2, value='',
+        df = df.replace(to_replace=-1, value='',
                         regex=True)
         pd.DataFrame(df).to_csv(
             f"{path}//{name_file}_down_time.csv", index=False)
