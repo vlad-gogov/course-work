@@ -16,12 +16,13 @@ time_service = [[5, 2], [2], [5, 2], [2]]
 count_cars = 5000
 K = 130
 path = "cars_pack_py//results"
-step = 2
-max_value = 20
+step = 5
+max_value = 85
 
-#utils.while_param(lamb, r, g, time_service, count_cars, K, step, path)
+utils.while_param(lamb, r, g, time_service,
+                  count_cars, K, max_value, step, path)
 
-utils.get_grid(lamb, r, g, time_service, count_cars, K, max_value, step, path)
+#utils.get_grid(lamb, r, g, time_service, count_cars, K, max_value, step, path)
 
 # utils.get_state(lamb, r, g, time_service, count_cars, K,
 #                step, "Correct_Puasson", path + "//Loop//Puasson")

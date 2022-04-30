@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 
-DEBUG = True
+DEBUG = False
 
 
 def debug_log(*args, **kwargs):
@@ -241,13 +241,12 @@ def wrapper(thread_id: int):
         lamb[0] += 0.1
 
 
-def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, path: str = ''):
-    for i in range(1, 5):
+def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+    while(lamb[0] <= 0.4):
         while(lamb[1] <= 0.5):
-            lamb[0] = 0.1 * i
             current_time = time_service.copy()
-            get_grid(lamb, r, g, current_time,
-                     count_serviced_cars, K, step, path)
+            get_grid(lamb, r, g, time_service,
+                     count_serviced_cars, K, max_value, step, path)
             print(f"Progress: {lamb[0]:.{1}} {lamb[1]:.{1}}")
             lamb[1] += 0.1
         lamb[0] += 0.1

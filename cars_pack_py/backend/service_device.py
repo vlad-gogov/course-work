@@ -9,7 +9,7 @@ from .utils import debug_log
 import math
 import random
 
-MAX_QUEUE = 500
+MAX_QUEUE = 1500
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -60,8 +60,6 @@ class ServiceDevice():
 
         count_cars = count_serviced_cars
         while flows[0].count <= count_cars or flows[1].count <= count_cars:
-            debug_log("Г (", iter + 1, ")", sep="")
-            debug_log("Время до обслуживания: ", start_time, "\n")
 
             current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
 
@@ -127,8 +125,6 @@ class ServiceDevice():
             count_cars += count_serviced_cars
 
             while flows[0].count <= count_cars or flows[1].count <= count_cars:
-                debug_log("Г (", iter + 1, ")", sep="")
-                debug_log("Время до обслуживания: ", start_time, "\n")
 
                 current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
 
@@ -187,9 +183,9 @@ class ServiceDevice():
                 next.append(flow.get_gamma())
                 next.append(flow.get_dispersion())
 
-            print("Count cars:", count_cars)
-            print(prev)
-            print(next)
+            debug_log("Count cars:", count_cars)
+            debug_log(prev)
+            debug_log(next)
 
             if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
                 finish = True
@@ -303,9 +299,9 @@ class ServiceDevice():
                 next.append(flow.get_gamma())
                 next.append(flow.get_dispersion())
 
-            print("Count cars:", count_cars)
-            print(prev)
-            print(next)
+            debug_log("Count cars:", count_cars)
+            debug_log(prev)
+            debug_log(next)
 
             if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
                 finish = True
