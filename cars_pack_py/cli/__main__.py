@@ -11,8 +11,8 @@ from .type_crossroads import TypeCrossroads
 lamb = [0.1, 0.1]
 r = [0.0, 0.0]
 g = [0.0, 0.0]
-#time_service = [[5, 2], [2], [5, 2], [2]]
-time_service = [[5, 2], [2], [5, 2], [0, 2], [2]]
+time_service = [[5, 2], [2], [5, 2], [2]]
+#time_service = [[5, 2], [2], [5, 2], [0, 2], [2]]
 count_cars = 5000
 K = 250
 path = "cars_pack_py//results"

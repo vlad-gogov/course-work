@@ -171,8 +171,29 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             f"{path}//{name_file}_down_time.csv", index=False)
 
 
-# Переписать
-def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
+def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+    name_file = ""
+    name_grid = ""
+    type_crossroads = TypeCrossroads.LOOP
+    if len(time_service) == 5:
+        type_crossroads = TypeCrossroads.G5
+
+    t1 = time_service[0][0]
+    t3 = time_service[2][0]
+
+    if type_crossroads == TypeCrossroads.LOOP:
+        path += "//Loop"
+        name_grid = "Loop"
+    elif type_crossroads == TypeCrossroads.G5:
+        path += "//G5"
+        name_grid = "G5"
+
+    if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
+        path += "//Puasson//State"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}_{max_value}"
+    else:
+        path += "//Bartlett//State"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}_{max_value}"
 
     sum = 0
     orientation = 0
@@ -185,32 +206,21 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
         print("Некоректное значение K")
         return
 
-    t1 = time_service[0][0]
-    t3 = time_service[2][0]
-
-    tabl = np.zeros((int((K - sum) / step) + 2, int(
-        (K - sum) / step) + 2))
-
-    for i in range(tabl.shape[0] - 1):
-        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i * step
-        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i * step
+    tabl = create_table(t1, t3, max_value, step)
 
     index_i = tabl.shape[0] - 2
     index_j = 1
-    tabl[index_i + 1, index_j - 1] = 0
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K:
-        while time_service[0][0] + time_service[2][0] + orientation <= K:
+    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value:
+        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value:
             pi1 = lamb[0]*(time_service[0][0] + time_service[1]
-                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[0][1]*time_service[0][0] <= 0
+                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[0][1] * time_service[0][0] <= 0
             pi2 = lamb[1]*(time_service[0][0] + time_service[1]
-                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[2][1]*time_service[2][0] <= 0
+                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[2][1] * time_service[2][0] <= 0
             res = pi1 and pi2
             tabl[index_i, index_j] = 1 if res else -1
             time_service[0][0] += step
             index_i -= 1
-            if res == 0:
-                break
         time_service[0][0] = t1
         index_i = tabl.shape[0] - 2
         index_j += 1
@@ -219,7 +229,11 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
     time_service[2][0] = t3
 
     pd.DataFrame(tabl).to_csv(
-        f"{path}//{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}.csv", index=False)
+        f"{path}//{name_file}.csv", index=False)
+    df = pd.read_csv(f"{path}//{name_file}.csv", sep=',', dtype=np.float64)
+    df = df.replace(to_replace=-1, value='', regex=True)
+    pd.DataFrame(df).to_csv(
+        f"{path}//{name_file}.csv", index=False)
 
 
 def wrapper(thread_id: int):
