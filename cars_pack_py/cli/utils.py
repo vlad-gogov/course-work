@@ -45,17 +45,17 @@ def combine_csv():
                         index=False, encoding='utf-8')
 
 
-def create_table(t1: float, t3: float, max_value: float, step: int) -> np.ndarray:
-    tabl = np.full((int(max_value / step) + 1, int(
-        max_value / step) + 1), -1.0, dtype=np.float64)
+def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray:
+    tabl = np.full((int((max_value[0] - t1) / step) + 2, int((
+        max_value[1] - t3) / step) + 2), -1.0, dtype=np.float64)
     for i in range(tabl.shape[0] - 1):
         tabl[tabl.shape[0] - 2 - i][0] = t1 + i * step
+    for i in range(tabl.shape[1] - 1):
         tabl[tabl.shape[0] - 1][i + 1] = t3 + i * step
-    tabl[tabl.shape[0] - 1, 0] = 0
     return tabl
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = ''):
 
     name_file = ""
     name_grid = ""
@@ -104,8 +104,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     index_i = tabl_opt.shape[0] - 2
     index_j = 1
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value:
-        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value:
+    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
+        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
 
@@ -211,8 +211,8 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
     index_i = tabl.shape[0] - 2
     index_j = 1
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value:
-        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value:
+    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
+        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
             pi1 = lamb[0]*(time_service[0][0] + time_service[1]
                            [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[0][1] * time_service[0][0] <= 0
             pi2 = lamb[1]*(time_service[0][0] + time_service[1]
