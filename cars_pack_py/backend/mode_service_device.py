@@ -51,6 +51,7 @@ class ModeServiceDevice(ModeService):
                     flow_cars.add_gamma(wait_time)
                     flow_cars.cars.pop(0)
                     i += 1
+                t += self.time_service
                 break
             else:
                 break

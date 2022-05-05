@@ -8,21 +8,22 @@ from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 
-lamb = [0.1, 0.3]
+lamb = [0.1, 0.2]
 r = [0.0, 0.0]
 g = [0.0, 0.0]
-#time_service = [[16, 2], [2], [16, 2], [2]]
-time_service = [[10, 2], [2], [16, 2], [0, 2], [2]]
+time_service = [[5, 1], [2], [5, 1], [2]]
+#time_service = [[5, 1], [2], [5, 1], [0, 1], [2]]
 count_cars = 5000
-K = 250
+K = 260
 path = "cars_pack_py//results"
-step = 1
-max_value = [20, 33]
+step = 5
+max_value = [90, 90]
+
+utils.while_param(lamb, r, g, time_service,
+                  count_cars, K, max_value, step, path)
 
 # utils.get_grid(lamb, r, g, time_service,
-#               count_cars, K, max_value, step, path)
-
-#utils.get_grid(lamb, r, g, time_service, count_cars, K, max_value, step, path)
+#                count_cars, K, max_value, step, path)
 
 # utils.get_state(lamb, r, g, time_service, count_cars, K,
-#                step, "Correct_Puasson", path + "//Loop//Puasson")
+#                 step, "Correct_Puasson", path + "//Loop//Puasson")

@@ -47,6 +47,8 @@ class ServiceDevice():
         isG5 = False
         isGenPi1Default = False
         count_G5 = 0
+        min_G5 = 10000
+        max_G5 = 0
         count_cycle = 0
         all_time_g5 = 0
 
@@ -88,10 +90,8 @@ class ServiceDevice():
                 flows[1].generation_cars(time_for_pi2, start_time)
 
             for i in range(count_flow):
-                if flows[i].queue >= max_q[i]:
-                    max_q[i] = flows[i].queue
                 if flows[i].queue >= MAX_QUEUE:
-                    return [-1 for _ in range(4 * len(flows))]
+                    return [-1 for _ in range(6 * len(flows))]
 
             if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
                 # Генерирование первой заявки по 1-ому потоку
@@ -99,13 +99,21 @@ class ServiceDevice():
                 lambda_b = self.lamb[0] / \
                     (1 + self.r[0]/(1 - self.g[0]))
                 delta = -math.log(1-p)/lambda_b
+
+                if delta < min_G5:
+                    min_G5 = delta
+                if delta > max_G5:
+                    max_G5 = delta
+
                 flows[0].add_cars(
                     delta + start_time)
 
                 all_time_g5 += delta
+
                 flows[1].generation_cars(delta, start_time)
                 start_time = mods[iter].service(
                     current_flow, start_time, delta)
+
                 delta = 0
                 count_G5 += 1
             else:
@@ -154,10 +162,8 @@ class ServiceDevice():
                     flows[1].generation_cars(time_for_pi2, start_time)
 
                 for i in range(count_flow):
-                    if flows[i].queue >= max_q[i]:
-                        max_q[i] = flows[i].queue
                     if flows[i].queue >= MAX_QUEUE:
-                        return [-1 for _ in range(4 * len(flows))]
+                        return [-1 for _ in range(6 * len(flows))]
 
                 if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
                     # Генерирование первой заявки по 1-ому потоку
@@ -169,6 +175,7 @@ class ServiceDevice():
                         delta + start_time)
 
                     all_time_g5 += delta
+
                     flows[1].generation_cars(delta, start_time)
                     start_time = mods[iter].service(
                         current_flow, start_time, delta)
@@ -202,6 +209,13 @@ class ServiceDevice():
         # среднее время простоя режима G5
         next.append(mods[ModesG5.Gamma_5].down_time /
                     count_G5 if count_G5 != 0 else 0)
+
+        # минимальное время пребывания в режиме Г5
+        next.append(min_G5)
+
+        # максимальное время пребывания в режиме Г5
+        next.append(max_G5)
+
         return next
 
     def Start_Seq(self, count_serviced_cars: int) -> list:

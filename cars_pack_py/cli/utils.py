@@ -75,10 +75,10 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
     if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
         path += "//Puasson"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}_{max_value}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
     else:
         path += "//Bartlett"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}_{max_value}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -96,6 +96,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         tabl_frequency_cycle = create_table(t1, t3, max_value, step)
         average_time_G5 = create_table(t1, t3, max_value, step)
         tabl_down_time = create_table(t1, t3, max_value, step)
+        tabl_min_G5 = create_table(t1, t3, max_value, step)
+        tabl_max_G5 = create_table(t1, t3, max_value, step)
 
     debug_log(tabl_opt.shape)
 
@@ -125,6 +127,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 tabl_frequency_cycle[index_i, index_j] = result[4]
                 average_time_G5[index_i, index_j] = result[5]
                 tabl_down_time[index_i, index_j] = result[6]
+                tabl_min_G5[index_i, index_j] = result[7]
+                tabl_max_G5[index_i, index_j] = result[8]
             debug_log("")
 
             time_service[0][0] += step
@@ -190,10 +194,10 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
 
     if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
         path += "//Puasson//State"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}_{max_value}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
     else:
         path += "//Bartlett//State"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}_{max_value}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
