@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 
-DEBUG = False
+DEBUG = True
 
 
 def debug_log(*args, **kwargs):
@@ -173,6 +173,24 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                         regex=True)
         pd.DataFrame(df).to_csv(
             f"{path}//{name_file}_down_time.csv", index=False)
+
+        pd.DataFrame(tabl_min_G5).to_csv(
+            f"{path}//{name_file}_min_G5.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}_min_G5.csv",
+                         sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='',
+                        regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_min_G5.csv", index=False)
+
+        pd.DataFrame(tabl_max_G5).to_csv(
+            f"{path}//{name_file}_max_G5.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}_max_G5.csv",
+                         sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='',
+                        regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_max_G5.csv", index=False)
 
 
 def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):

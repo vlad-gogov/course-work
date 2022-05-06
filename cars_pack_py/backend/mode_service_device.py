@@ -16,16 +16,16 @@ class ModeServiceDevice(ModeService):
 
     def service(self, flow_cars: Flow, start_time: float = 0, delta: float = 0):
         # Число потенциально обслужанных машин
-        new_time_work = (self.time_work if delta == 0 else delta)
+        new_time_work = self.time_work + delta
+
+        if delta != 0:
+            self.max_count_service = int(new_time_work / self.time_service)
 
         next_time = start_time + new_time_work
 
         t = start_time
         if len(flow_cars.cars) and flow_cars.cars[0] >= t:
             t = flow_cars.cars[0]
-
-        if self.mode == Type.DETECTOR_MODE:
-            self.max_count_service = int(delta / self.time_service)
 
         for i in range(self.max_count_service):
 
@@ -41,7 +41,6 @@ class ModeServiceDevice(ModeService):
                 wait_time = max((t - flow_cars.cars[0]), 0)
                 flow_cars.add_gamma(wait_time)
                 t += self.time_service
-                flow_cars.cars.pop(0)
 
             elif next_time - self.time_service <= flow_cars.cars[0] <= next_time:
                 wait_time = self.time_service if t > flow_cars.cars[0] else 0
@@ -49,7 +48,6 @@ class ModeServiceDevice(ModeService):
                     if (flow_cars.cars[0] <= next_time):
                         break
                     flow_cars.add_gamma(wait_time)
-                    flow_cars.cars.pop(0)
                     i += 1
                 t += self.time_service
                 break

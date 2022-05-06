@@ -9,7 +9,7 @@ from .utils import debug_log
 import math
 import random
 
-MAX_QUEUE = 1500
+MAX_queue = 1500
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -65,22 +65,45 @@ class ServiceDevice():
 
             current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
 
-            if iter == ModesG5.Gamma_1 or iter == ModesG5.Gamma_3:
+            if iter == ModesG5.Gamma_1:
                 current_flow.generation_cars(
                     mods[iter].get_time(), start_time)
             elif iter == ModesG5.Gamma_2:
                 count_cycle += 1
-                if flows[0].queue > 0:
+                if flows[0].queue() > 0:
                     isG5 = False
                     flows[0].generation_cars(
                         time_for_pi1_full, start_time)
                 else:
                     flows[0].generation_cars(time_for_pi1_default, start_time)
                     isGenPi1Default = True
-                    if flows[0].queue > 0:
+                    if flows[0].queue() > 0:
                         isG5 = False
                     else:
                         isG5 = True
+
+            elif iter == ModesG5.Gamma_3:
+                if isG5:
+                    count_G5 += 1
+                    # Генерирование первой заявки по 1-ому потоку
+                    p = random.uniform(0, 1 - consts.EPSILON)
+                    lambda_b = self.lamb[0] / \
+                        (1 + self.r[0]/(1 - self.g[0]))
+                    delta = -math.log(1-p)/lambda_b
+
+                    if delta < min_G5:
+                        min_G5 = delta
+                    if delta > max_G5:
+                        max_G5 = delta
+
+                    flows[0].add_cars(
+                        delta + start_time)
+                    all_time_g5 += delta
+
+                    flows[1].generation_cars(
+                        mods[iter].get_time() + delta, start_time)
+                else:
+                    flows[1].generation_cars(mods[iter].get_time(), start_time)
 
             elif iter == ModesG5.Gamma_4:
                 if isG5 or isGenPi1Default:
@@ -90,32 +113,12 @@ class ServiceDevice():
                 flows[1].generation_cars(time_for_pi2, start_time)
 
             for i in range(count_flow):
-                if flows[i].queue >= MAX_QUEUE:
+                if flows[i].queue() >= MAX_queue:
                     return [-1 for _ in range(6 * len(flows))]
 
-            if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
-                # Генерирование первой заявки по 1-ому потоку
-                p = random.uniform(0, 1 - consts.EPSILON)
-                lambda_b = self.lamb[0] / \
-                    (1 + self.r[0]/(1 - self.g[0]))
-                delta = -math.log(1-p)/lambda_b
-
-                if delta < min_G5:
-                    min_G5 = delta
-                if delta > max_G5:
-                    max_G5 = delta
-
-                flows[0].add_cars(
-                    delta + start_time)
-
-                all_time_g5 += delta
-
-                flows[1].generation_cars(delta, start_time)
+            if iter == ModesG5.Gamma_3 and isG5:
                 start_time = mods[iter].service(
                     current_flow, start_time, delta)
-
-                delta = 0
-                count_G5 += 1
             else:
                 start_time = mods[iter].service(current_flow, start_time)
 
@@ -136,12 +139,12 @@ class ServiceDevice():
 
                 current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
 
-                if iter == ModesG5.Gamma_1 or iter == ModesG5.Gamma_3:
+                if iter == ModesG5.Gamma_1:
                     current_flow.generation_cars(
                         mods[iter].get_time(), start_time)
                 elif iter == ModesG5.Gamma_2:
                     count_cycle += 1
-                    if flows[0].queue > 0:
+                    if flows[0].queue() > 0:
                         isG5 = False
                         flows[0].generation_cars(
                             time_for_pi1_full, start_time)
@@ -149,10 +152,34 @@ class ServiceDevice():
                         flows[0].generation_cars(
                             time_for_pi1_default, start_time)
                         isGenPi1Default = True
-                        if flows[0].queue > 0:
+                        if flows[0].queue() > 0:
                             isG5 = False
                         else:
                             isG5 = True
+
+                elif iter == ModesG5.Gamma_3:
+                    if isG5:
+                        count_G5 += 1
+                        # Генерирование первой заявки по 1-ому потоку
+                        p = random.uniform(0, 1 - consts.EPSILON)
+                        lambda_b = self.lamb[0] / \
+                            (1 + self.r[0]/(1 - self.g[0]))
+                        delta = -math.log(1-p)/lambda_b
+
+                        if delta < min_G5:
+                            min_G5 = delta
+                        if delta > max_G5:
+                            max_G5 = delta
+
+                        flows[0].add_cars(
+                            delta + start_time + mods[iter].get_time())
+                        all_time_g5 += delta
+
+                        flows[1].generation_cars(
+                            mods[iter].get_time() + delta, start_time)
+                    else:
+                        flows[1].generation_cars(
+                            mods[iter].get_time(), start_time)
 
                 elif iter == ModesG5.Gamma_4:
                     if isG5 or isGenPi1Default:
@@ -162,25 +189,12 @@ class ServiceDevice():
                     flows[1].generation_cars(time_for_pi2, start_time)
 
                 for i in range(count_flow):
-                    if flows[i].queue >= MAX_QUEUE:
+                    if flows[i].queue() >= MAX_queue:
                         return [-1 for _ in range(6 * len(flows))]
 
-                if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
-                    # Генерирование первой заявки по 1-ому потоку
-                    p = random.uniform(0, 1 - consts.EPSILON)
-                    lambda_b = self.lamb[0] / \
-                        (1 + self.r[0]/(1 - self.g[0]))
-                    delta = -math.log(1-p)/lambda_b
-                    flows[0].add_cars(
-                        delta + start_time)
-
-                    all_time_g5 += delta
-
-                    flows[1].generation_cars(delta, start_time)
+                if iter == ModesG5.Gamma_3 and isG5:
                     start_time = mods[iter].service(
                         current_flow, start_time, delta)
-                    delta = 0
-                    count_G5 += 1
                 else:
                     start_time = mods[iter].service(current_flow, start_time)
 
@@ -193,6 +207,7 @@ class ServiceDevice():
             debug_log("Count cars:", count_cars)
             debug_log(prev)
             debug_log(next)
+            debug_log("Count G5:", count_G5)
 
             if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
                 finish = True
@@ -211,7 +226,7 @@ class ServiceDevice():
                     count_G5 if count_G5 != 0 else 0)
 
         # минимальное время пребывания в режиме Г5
-        next.append(min_G5)
+        next.append(min_G5 if min_G5 != 10000 else 0)
 
         # максимальное время пребывания в режиме Г5
         next.append(max_G5)
@@ -264,13 +279,13 @@ class ServiceDevice():
             iter = (iter + 1) % (len(mods))
 
             for i in range(count_flow):
-                if flows[i].queue >= max_q[i]:
-                    max_q[i] = flows[i].queue
+                if flows[i].queue() >= max_q[i]:
+                    max_q[i] = flows[i].queue()
 
             for i in range(count_flow):
-                if flows[i].queue >= max_q[i]:
-                    max_q[i] = flows[i].queue
-                if flows[i].queue >= MAX_QUEUE:
+                if flows[i].queue() >= max_q[i]:
+                    max_q[i] = flows[i].queue()
+                if flows[i].queue() >= MAX_queue:
                     return [-1 for _ in range(2 * len(flows))]
 
         for flow in flows:
@@ -300,13 +315,13 @@ class ServiceDevice():
                 iter = (iter + 1) % (len(mods))
 
                 for i in range(count_flow):
-                    if flows[i].queue >= max_q[i]:
-                        max_q[i] = flows[i].queue
+                    if flows[i].queue() >= max_q[i]:
+                        max_q[i] = flows[i].queue()
 
                 for i in range(count_flow):
-                    if flows[i].queue >= max_q[i]:
-                        max_q[i] = flows[i].queue
-                    if flows[i].queue >= MAX_QUEUE:
+                    if flows[i].queue() >= max_q[i]:
+                        max_q[i] = flows[i].queue()
+                    if flows[i].queue() >= MAX_queue:
                         return [-1 for _ in range(2 * len(flows))]
 
             for flow in flows:
