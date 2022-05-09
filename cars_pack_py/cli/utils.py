@@ -8,17 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 from .type_flow import TypeFlow
-
-DEBUG = True
-
-
-def debug_log(*args, **kwargs):
-    pass
-
-
-if DEBUG:
-    def debug_log(*args, **kwargs):
-        print(*args, **kwargs)
+from ..backend.utils import debug_log
 
 
 def averageLengthPack(car_flow: list) -> float:
