@@ -1,5 +1,6 @@
 from concurrent.futures.thread import ThreadPoolExecutor
 import numpy
+import os
 
 from cars_pack_py.backend.model_bartlet import ModelBartlet
 
@@ -18,6 +19,9 @@ K = 270
 path = "cars_pack_py//results"
 step = 1
 max_value = [50, 50]
+if not os.path.isdir(path):
+    os.mkdir(path)
+
 
 # utils.while_param(lamb, r, g, time_service,
 #                   count_cars, K, max_value, step, path)

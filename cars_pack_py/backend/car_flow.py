@@ -1,6 +1,3 @@
-from traceback import print_tb
-from matplotlib.pyplot import bar_label
-from urllib3 import Retry
 from . import consts
 from .model_poisson import ModelPoisson
 from .model_bartlet import ModelBartlet

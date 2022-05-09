@@ -71,25 +71,28 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     if opt_value:
         if type_crossroads == TypeCrossroads.LOOP:
             path += "//Loop"
+            if not os.path.isdir(path):
+                os.mkdir(path)
             name_grid = "Loop"
         elif type_crossroads == TypeCrossroads.G5:
             path += "//G5"
+            if not os.path.isdir(path):
+                os.mkdir(path)
             name_grid = "G5"
 
         if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
             path += "//Puasson"
-            try:
+            if not os.path.isdir(path):
                 os.mkdir(path)
-            except OSError as error:
-                b = 0
             name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
         else:
             type_flow = TypeFlow.BARTLETT
-            path += f"//Bartlett//{r[0]:.{1}}_{g[0]:.{1}} {r[1]:.{1}}_{g[1]:.{1}}"
-            try:
+            path += f"//Bartlett"
+            if not os.path.isdir(path):
                 os.mkdir(path)
-            except OSError as error:
-                b = 0
+            path += f"//{r[0]:.{1}}_{g[0]:.{1}} {r[1]:.{1}}_{g[1]:.{1}}"
+            if not os.path.isdir(path):
+                os.mkdir(path)
             name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
