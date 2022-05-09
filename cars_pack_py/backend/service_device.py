@@ -1,4 +1,6 @@
 from numpy import ndarray
+
+from cars_pack_py.cli.type_flow import TypeFlow
 from . import consts
 from .flow import Flow
 from .mode_change import ModeChange
@@ -21,7 +23,7 @@ class ServiceDevice():
         self.g = g
         self.time_service = time_service
 
-    def Start_G5(self, count_serviced_cars: int) -> list:
+    def Start_G5(self, count_serviced_cars: int, type_flow: TypeFlow) -> list:
         time_Gamma_1 = self.time_service[0][0]
         time_Gamma_2 = self.time_service[1][0]
         time_Gamma_3 = self.time_service[2][0]
@@ -91,7 +93,7 @@ class ServiceDevice():
                         (1 + self.r[0]/(1 - self.g[0]))
                     delta = -math.log(1-p)/lambda_b
 
-                    if delta < min_G5:
+                    if delta < min_G5 and delta != 0:
                         min_G5 = delta
                     if delta > max_G5:
                         max_G5 = delta
@@ -131,6 +133,8 @@ class ServiceDevice():
 
         finish = False
         next = []
+        if type_flow == TypeFlow.BARTLETT:
+            count_serviced_cars *= 2
         while(not finish):
 
             count_cars += count_serviced_cars
@@ -166,7 +170,7 @@ class ServiceDevice():
                             (1 + self.r[0]/(1 - self.g[0]))
                         delta = -math.log(1-p)/lambda_b
 
-                        if delta < min_G5:
+                        if delta < min_G5 and delta != 0:
                             min_G5 = delta
                         if delta > max_G5:
                             max_G5 = delta
@@ -207,13 +211,17 @@ class ServiceDevice():
             debug_log("Count cars:", count_cars)
             debug_log(prev)
             debug_log(next)
-            debug_log("Count G5:", count_G5)
 
             if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
                 finish = True
             else:
                 prev = next.copy()
                 next.clear()
+
+        # print(
+        #     f"Отношение числа срабатывания режима Г5 к числу всех циклов {count_G5} / {count_cycle}")
+        # print(
+        #     f"Число обслужанных машин по потокам {flows[0].count} / {flows[1].count}")
 
         # отношение числа срабатывания режима Г5 к числу всех циклов
         next.append(count_G5 / count_cycle)
@@ -222,7 +230,7 @@ class ServiceDevice():
         next.append(all_time_g5 / count_G5 if count_G5 != 0 else 0)
 
         # среднее время простоя режима G5
-        next.append(mods[ModesG5.Gamma_5].down_time /
+        next.append(mods[ModesG5.Gamma_3].down_time /
                     count_G5 if count_G5 != 0 else 0)
 
         # минимальное время пребывания в режиме Г5
@@ -233,7 +241,7 @@ class ServiceDevice():
 
         return next
 
-    def Start_Seq(self, count_serviced_cars: int) -> list:
+    def Start_Seq(self, count_serviced_cars: int, type_flow: TypeFlow) -> list:
         time_Gamma_1 = self.time_service[0][0]
         time_Gamma_2 = self.time_service[1][0]
         time_Gamma_3 = self.time_service[2][0]
@@ -294,6 +302,8 @@ class ServiceDevice():
 
         finish = False
         next = []
+        if type_flow == TypeFlow.BARTLETT:
+            count_serviced_cars *= 2
         while(not finish):
 
             count_cars += count_serviced_cars

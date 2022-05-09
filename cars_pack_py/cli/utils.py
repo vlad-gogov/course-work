@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
+from .type_flow import TypeFlow
 
 DEBUG = True
 
@@ -55,30 +56,41 @@ def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray
     return tabl
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = ''):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = '', opt_value: bool = False):
 
     name_file = ""
     name_grid = ""
     type_crossroads = TypeCrossroads.LOOP
+    type_flow = TypeFlow.PUASSON
     if len(time_service) == 5:
         type_crossroads = TypeCrossroads.G5
 
     t1 = time_service[0][0]
     t3 = time_service[2][0]
 
-    if type_crossroads == TypeCrossroads.LOOP:
-        path += "//Loop"
-        name_grid = "Loop"
-    elif type_crossroads == TypeCrossroads.G5:
-        path += "//G5"
-        name_grid = "G5"
+    if opt_value:
+        if type_crossroads == TypeCrossroads.LOOP:
+            path += "//Loop"
+            name_grid = "Loop"
+        elif type_crossroads == TypeCrossroads.G5:
+            path += "//G5"
+            name_grid = "G5"
 
-    if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
-        path += "//Puasson"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
-    else:
-        path += "//Bartlett"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
+            path += "//Puasson"
+            try:
+                os.mkdir(path)
+            except OSError as error:
+                b = 0
+            name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        else:
+            type_flow = TypeFlow.BARTLETT
+            path += f"//Bartlett//{r[0]:.{1}}_{g[0]:.{1}} {r[1]:.{1}}_{g[1]:.{1}}"
+            try:
+                os.mkdir(path)
+            except OSError as error:
+                b = 0
+            name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -106,6 +118,15 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     index_i = tabl_opt.shape[0] - 2
     index_j = 1
 
+    opt_avg = 100000
+    opt_t1 = 0
+    opt_t3 = 0
+    frequence_opt = 0
+    average_G5 = 0
+    down_G5 = 0
+    min_G5 = 0
+    max_G5 = 0
+
     while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
         while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
             debug_log("T1 =", time_service[0][0],
@@ -114,15 +135,28 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             sd = ServiceDevice(lamb, r, g, time_service)
 
             if type_crossroads == TypeCrossroads.LOOP:
-                result = sd.Start_Seq(count_serviced_cars)
+                result = sd.Start_Seq(count_serviced_cars, type_flow)
                 avg = sd.get_weight_avg_gamma([result[0], result[2]])
                 debug_log("Y:", avg)
+                if avg < opt_avg and avg != -1:
+                    opt_avg = avg
+                    opt_t1 = time_service[0][0]
+                    opt_t3 = time_service[2][0]
                 tabl_opt[index_i, index_j] = avg
 
             elif type_crossroads == TypeCrossroads.G5:
-                result = sd.Start_G5(count_serviced_cars)
+                result = sd.Start_G5(count_serviced_cars, type_flow)
                 avg = sd.get_weight_avg_gamma([result[0], result[2]])
                 debug_log("Y:", avg)
+                if avg < opt_avg and avg != -1:
+                    opt_avg = avg
+                    opt_t1 = time_service[0][0]
+                    opt_t3 = time_service[2][0]
+                    frequence_opt = result[4]
+                    average_G5 = result[5]
+                    down_G5 = result[6]
+                    min_G5 = result[7]
+                    max_G5 = result[8]
                 tabl_opt[index_i, index_j] = avg
                 tabl_frequency_cycle[index_i, index_j] = result[4]
                 average_time_G5[index_i, index_j] = result[5]
@@ -139,6 +173,21 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         time_service[2][0] += step
 
     time_service[2][0] = t3
+
+    if not opt_value:
+        shift = 7
+        opt_time_service = time_service.copy()
+        opt_time_service[0][0] = opt_t1 - shift if opt_t1 - shift >= 2 else 2
+        opt_time_service[2][0] = opt_t3 - shift if opt_t3 - shift >= 2 else 2
+        new_max_value = [opt_t1 + shift, opt_t3 + shift]
+        get_grid(lamb, r, g, opt_time_service,
+                 count_serviced_cars, K, new_max_value, 1, path, True)
+        return
+
+    print("Opt value =", opt_avg, "; T1 =", opt_t1, "; T3 =", opt_t3)
+    if type_crossroads == TypeCrossroads.G5:
+        print(
+            f"Frequency = {frequence_opt}; Average = {average_G5}; Down = {down_G5}; Min = {min_G5}; Max = {max_G5}")
 
     pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)

@@ -54,7 +54,7 @@ class ModeServiceDevice(ModeService):
             else:
                 break
 
-        if t <= next_time:
+        if next_time - delta <= t <= next_time and delta != 0:
             self.down_time += next_time - t
 
         return next_time
