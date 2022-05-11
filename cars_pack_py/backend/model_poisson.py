@@ -1,4 +1,4 @@
-import random
+import numpy
 import math
 
 from .model import Model
@@ -19,7 +19,7 @@ class ModelPoisson(Model):
     def count_requests(self) -> int:
         count = 0
         a = self.lamb * self.time
-        p = random.uniform(0, 1 - consts.EPSILON) * math.exp(a)
+        p = numpy.random.uniform(0, 1 - consts.EPSILON) * math.exp(a)
         l = 1
         F = l
         while F <= p:

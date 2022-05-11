@@ -9,19 +9,18 @@ from ..backend.car_flow import CarFlow
 from ..backend.service_device import ServiceDevice
 from .type_crossroads import TypeCrossroads
 
-lamb = [0.3, 0.5]
-r = [0.5, 0.5]
-g = [0.5, 0.5]
-time_service = [[2, 1], [2], [2, 1], [2]]
-#time_service = [[5, 1], [2], [5, 1], [0, 1], [2]]
+lamb = [0.1, 0.1]
+r = [0.7, 0.7]
+g = [0.95, 0.95]
+time_service = [[27, 1], [2], [27, 1], [2]]
+#time_service = [[2, 1], [2], [2, 1], [0, 1], [2]]
 count_cars = 5000
 K = 270
 path = "cars_pack_py//results"
 step = 1
-max_value = [50, 50]
+max_value = [35, 40]
 if not os.path.isdir(path):
     os.mkdir(path)
-
 
 # utils.while_param(lamb, r, g, time_service,
 #                   count_cars, K, max_value, step, path)

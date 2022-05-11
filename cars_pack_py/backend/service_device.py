@@ -1,5 +1,3 @@
-from numpy import ndarray
-
 from cars_pack_py.cli.type_flow import TypeFlow
 from . import consts
 from .flow import Flow
@@ -8,8 +6,8 @@ from .mode_service_device import ModeServiceDevice
 from .type_service import Type, ModesSeq, ModesG5
 from .utils import debug_log
 
+import numpy
 import math
-import random
 
 MAX_queue = 1500
 EPSILON_TIME = 1
@@ -88,7 +86,7 @@ class ServiceDevice():
                 if isG5:
                     count_G5 += 1
                     # Генерирование первой заявки по 1-ому потоку
-                    p = random.uniform(0, 1 - consts.EPSILON)
+                    p = numpy.random.uniform(0, 1 - consts.EPSILON)
                     lambda_b = self.lamb[0] / \
                         (1 + self.r[0]/(1 - self.g[0]))
                     delta = -math.log(1-p)/lambda_b
@@ -165,7 +163,7 @@ class ServiceDevice():
                     if isG5:
                         count_G5 += 1
                         # Генерирование первой заявки по 1-ому потоку
-                        p = random.uniform(0, 1 - consts.EPSILON)
+                        p = numpy.random.uniform(0, 1 - consts.EPSILON)
                         lambda_b = self.lamb[0] / \
                             (1 + self.r[0]/(1 - self.g[0]))
                         delta = -math.log(1-p)/lambda_b

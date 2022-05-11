@@ -6,9 +6,13 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
+from ..backend import consts
+
 from .type_crossroads import TypeCrossroads
 from .type_flow import TypeFlow
 from ..backend.utils import debug_log
+
+SEED_TURN = False
 
 
 def averageLengthPack(car_flow: list) -> float:
@@ -47,7 +51,6 @@ def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray
 
 
 def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = '', opt_value: bool = False):
-
     name_file = ""
     name_grid = ""
     type_crossroads = TypeCrossroads.LOOP
@@ -57,6 +60,10 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
 
     t1 = time_service[0][0]
     t3 = time_service[2][0]
+
+    if t1 > max_value[0] or t3 > max_value[1]:
+        print("Введеные неверные максимальные значения")
+        return
 
     if opt_value:
         if type_crossroads == TypeCrossroads.LOOP:
@@ -74,16 +81,16 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             path += "//Puasson"
             if not os.path.isdir(path):
                 os.mkdir(path)
-            name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+            name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
         else:
             type_flow = TypeFlow.BARTLETT
             path += f"//Bartlett"
             if not os.path.isdir(path):
                 os.mkdir(path)
-            path += f"//{r[0]:.{1}}_{g[0]:.{1}} {r[1]:.{1}}_{g[1]:.{1}}"
+            path += f"//{r[0]:.{2}}_{g[0]:.{2}} {r[1]:.{2}}_{g[1]:.{2}}"
             if not os.path.isdir(path):
                 os.mkdir(path)
-            name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+            name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -104,7 +111,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         tabl_min_G5 = create_table(t1, t3, max_value, step)
         tabl_max_G5 = create_table(t1, t3, max_value, step)
 
-    debug_log(tabl_opt.shape)
+    debug_log(f"({tabl_opt.shape[0] - 2}, {tabl_opt.shape[1] - 2})")
 
     result = np.zeros(len(lamb))
 
@@ -124,7 +131,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
-
+            if SEED_TURN:
+                np.random.seed(consts.SEED)
             sd = ServiceDevice(lamb, r, g, time_service)
 
             if type_crossroads == TypeCrossroads.LOOP:
@@ -157,7 +165,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 tabl_min_G5[index_i, index_j] = result[7]
                 tabl_max_G5[index_i, index_j] = result[8]
             debug_log("")
-
+            if SEED_TURN:
+                np.random.seed(0)
             time_service[0][0] += step
             index_i -= 1
         time_service[0][0] = t1
@@ -168,7 +177,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     time_service[2][0] = t3
 
     if not opt_value:
-        shift = 7
+        shift = 5
         opt_time_service = time_service.copy()
         opt_time_service[0][0] = opt_t1 - shift if opt_t1 - shift >= 2 else 2
         opt_time_service[2][0] = opt_t3 - shift if opt_t3 - shift >= 2 else 2
@@ -254,10 +263,10 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
 
     if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
         path += "//Puasson//State"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{lamb[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
     else:
         path += "//Bartlett//State"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{1}}_{r[0]:.{1}}_{g[0]:.{1}}_{lamb[1]:.{1}}_{r[1]:.{1}}_{g[1]:.{1}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{r[0]:.{2}}_{g[0]:.{2}}_{lamb[1]:.{2}}_{r[1]:.{2}}_{g[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -311,7 +320,7 @@ def wrapper(thread_id: int):
         return
     while(lamb[0] <= 0.5):
         while(lamb[1] <= 0.5):
-            print(f"Progress {lamb[0]:.{1}} {lamb[1]:.{1}}")
+            print(f"Progress {lamb[0]:.{2}} {lamb[1]:.{2}}")
             get_grid(lamb, r, g, time_service, count_cars, K, 5,
                      "Loop", "cars_pack_py//results//Puasson//Loop")
             lamb[1] += 0.1
@@ -325,7 +334,7 @@ def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced
             current_time = time_service.copy()
             get_grid(lamb, r, g, time_service,
                      count_serviced_cars, K, max_value, step, path)
-            print(f"Progress: {lamb[0]:.{1}} {lamb[1]:.{1}}")
+            print(f"Progress: {lamb[0]:.{2}} {lamb[1]:.{2}}")
             lamb[1] += 0.1
         lamb[0] += 0.1
         lamb[1] = lamb[0]
