@@ -1,6 +1,23 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
 
 class Type(Enum):
     DEFAULT_MODE = 0
-    DETECTOR_MODE = 1
+    SERVICE_MODE = 1
+    PREPARE_MODE = 2
+    DETECTOR_MODE = 3
+
+
+class ModesSeq(IntEnum):
+    Gamma_1 = 0
+    Gamma_2 = 1
+    Gamma_3 = 2
+    Gamma_4 = 3
+
+
+class ModesG5(IntEnum):
+    Gamma_1 = 0
+    Gamma_2 = 1
+    Gamma_3 = 2
+    Gamma_4 = 4
+    Gamma_5 = 3

@@ -1,15 +1,15 @@
+from cars_pack_py.cli.type_flow import TypeFlow
 from . import consts
 from .flow import Flow
 from .mode_change import ModeChange
 from .mode_service_device import ModeServiceDevice
-from .type_service import Type
-from .car_flow import CarFlow
+from .type_service import Type, ModesSeq, ModesG5
 from .utils import debug_log
 
+import numpy
 import math
-import random
 
-MAX_QUEUE = 1000
+MAX_queue = 1500
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -21,155 +21,332 @@ class ServiceDevice():
         self.g = g
         self.time_service = time_service
 
-    def Start(self, count_serviced_cars: int) -> list:
+    def Start_G5(self, count_serviced_cars: int, type_flow: TypeFlow) -> list:
+        time_Gamma_1 = self.time_service[0][0]
+        time_Gamma_2 = self.time_service[1][0]
+        time_Gamma_3 = self.time_service[2][0]
+        time_Gamma_5 = self.time_service[3][0]
+        time_Gamma_4 = self.time_service[4][0]
         count_flow = len(self.lamb)
         flows = []
         for i in range(count_flow):
-            flows.append(Flow())
-
-        g5 = 0
-        cycles = 1
+            flows.append(Flow(self.lamb[i], self.r[i], self.g[i]))
 
         mods = []
         for i in range(len(self.time_service)):
             if len(self.time_service[i]) == 2:
                 mods.append(ModeServiceDevice(
-                    self.time_service[i][0], self.time_service[i][1], Type.DETECTOR_MODE if self.time_service[i][0] == 0 else Type.DEFAULT_MODE))
+                    self.time_service[i][0], self.time_service[i][1], Type.DETECTOR_MODE if self.time_service[i][0] == 0 else Type.SERVICE_MODE))
             if len(self.time_service[i]) == 1:
                 mods.append(ModeChange(self.time_service[i][0]))
 
-        iter = 1  # Начинаем работу с режима Г(2)
+        iter = ModesG5.Gamma_2  # Начинаем работу с режима Г(2)
+        max_q = [0, 0]
         start_time = 0
         delta = 0
-        current_flow = None
         isG5 = False
-        time_pi2 = self.time_service[0][0] + \
-            self.time_service[1][0] + self.time_service[4][0]
-        time_pi1 = self.time_service[1][0] + self.time_service[2][0]
+        isGenPi1Default = False
+        count_G5 = 0
+        min_G5 = 10000
+        max_G5 = 0
+        count_cycle = 0
+        all_time_g5 = 0
 
-        temp = CarFlow(self.lamb[1], self.time_service[1][0],
-                       self.r[1], self.g[1]).create_flow(mode=True)
-        flows[1].add_cars(temp, start_time)
+        time_for_pi2 = time_Gamma_1 + time_Gamma_2 + time_Gamma_4
+        time_for_pi1_default = time_Gamma_2 + time_Gamma_3
+        time_for_pi1_full = time_for_pi1_default + time_Gamma_4
 
-        while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
-            # while start_time <= time:
-            debug_log("Г (", iter + 1, ")", sep="")
-            debug_log(flows[0].cars, "\n", flows[1].cars)
-            debug_log("Время до обслуживания: ", start_time, "\n")
+        current_flow = flows[1]
+        flows[1].generation_cars(time_for_pi2, start_time)
+        start_time = time_for_pi2
 
-            current_flow = flows[0] if iter == 0 else flows[1]
+        count_cars = count_serviced_cars
+        while flows[0].count <= count_cars or flows[1].count <= count_cars:
 
-            if iter == 0:
-                cycles += 1
+            current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
 
-            if iter == 1:
-                if flows[0].queue > 0:
+            if iter == ModesG5.Gamma_1:
+                current_flow.generation_cars(
+                    mods[iter].get_time(), start_time)
+            elif iter == ModesG5.Gamma_2:
+                count_cycle += 1
+                if flows[0].queue() > 0:
                     isG5 = False
-                    flows[0].add_cars(CarFlow(self.lamb[0], time_pi1 + self.time_service[4][0],
-                                              self.r[0], self.g[0]).create_flow(start_time, mode=True), start_time)
+                    flows[0].generation_cars(
+                        time_for_pi1_full, start_time)
                 else:
-                    flows[0].add_cars(CarFlow(self.lamb[0], time_pi1,
-                                              self.r[0], self.g[0]).create_flow(start_time, mode=True), start_time)
-            elif iter == 3:
-                flows[1].add_cars(CarFlow(self.lamb[1], time_pi2,
-                                          self.r[1], self.g[1]).create_flow(start_time, mode=True), start_time)
-                if flows[0].queue > 0:
-                    flows[0].add_cars(CarFlow(self.lamb[0], self.time_service[4][0],
-                                              self.r[0], self.g[0]).create_flow(start_time, mode=True), start_time)
-                    isG5 = False
-                else:
-                    isG5 = True
-                    p = random.uniform(0, 1 - consts.EPSILON)
-                    lambda_b = self.lamb[0] / (1 + self.r[0]/(1 - self.g[0]))
-                    delta = -math.log(1-p)/lambda_b
-                    flows[0].add_cars([delta + start_time], start_time)
-            elif iter == 4:
+                    flows[0].generation_cars(time_for_pi1_default, start_time)
+                    isGenPi1Default = True
+                    if flows[0].queue() > 0:
+                        isG5 = False
+                    else:
+                        isG5 = True
+
+            elif iter == ModesG5.Gamma_3:
                 if isG5:
-                    flows[0].add_cars(CarFlow(self.lamb[0], self.time_service[4][0],
-                                              self.r[0], self.g[0]).create_flow(start_time, mode=True), start_time)
+                    count_G5 += 1
+                    # Генерирование первой заявки по 1-ому потоку
+                    p = numpy.random.uniform(0, 1 - consts.EPSILON)
+                    lambda_b = self.lamb[0] / \
+                        (1 + self.r[0]/(1 - self.g[0]))
+                    delta = -math.log(1-p)/lambda_b
 
-            if mods[iter].get_type() == Type.DETECTOR_MODE and isG5:
+                    if delta < min_G5 and delta != 0:
+                        min_G5 = delta
+                    if delta > max_G5:
+                        max_G5 = delta
+
+                    flows[0].add_cars(
+                        delta + start_time)
+                    all_time_g5 += delta
+
+                    flows[1].generation_cars(
+                        mods[iter].get_time() + delta, start_time)
+                else:
+                    flows[1].generation_cars(mods[iter].get_time(), start_time)
+
+            elif iter == ModesG5.Gamma_4:
+                if isG5 or isGenPi1Default:
+                    flows[0].generation_cars(time_Gamma_4, start_time)
+                    isG5 = False
+                    isGenPi1Default = False
+                flows[1].generation_cars(time_for_pi2, start_time)
+
+            for i in range(count_flow):
+                if flows[i].queue() >= MAX_queue:
+                    return [-1 for _ in range(6 * len(flows))]
+
+            if iter == ModesG5.Gamma_3 and isG5:
                 start_time = mods[iter].service(
                     current_flow, start_time, delta)
-                delta = 0
-                g5 += 1
-                isG5 = False
             else:
                 start_time = mods[iter].service(current_flow, start_time)
 
             iter = (iter + 1) % (len(mods))
-            for i in range(len(flows)):
-                print(flows[i].queue)
-                input("ENTER")
-                if (flows[i].queue >= MAX_QUEUE):
-                    return [-1 for i in range(2 * len(flows))]
 
-        result = []
-        debug_log("Г(5): ", g5)
-        debug_log("Cycles: ", cycles)
+        prev = []
         for flow in flows:
-            result.append(flow.get_gamma())
-            result.append(flow.get_dispersion())
-        return result
+            prev.append(flow.get_gamma())
+            prev.append(flow.get_dispersion())
 
-    def Start_Seq(self, count_serviced_cars: int) -> list:
+        finish = False
+        next = []
+        if type_flow == TypeFlow.BARTLETT:
+            count_serviced_cars *= 2
+        while(not finish):
+
+            count_cars += count_serviced_cars
+
+            while flows[0].count <= count_cars or flows[1].count <= count_cars:
+
+                current_flow = flows[0] if iter == ModesG5.Gamma_1 else flows[1]
+
+                if iter == ModesG5.Gamma_1:
+                    current_flow.generation_cars(
+                        mods[iter].get_time(), start_time)
+                elif iter == ModesG5.Gamma_2:
+                    count_cycle += 1
+                    if flows[0].queue() > 0:
+                        isG5 = False
+                        flows[0].generation_cars(
+                            time_for_pi1_full, start_time)
+                    else:
+                        flows[0].generation_cars(
+                            time_for_pi1_default, start_time)
+                        isGenPi1Default = True
+                        if flows[0].queue() > 0:
+                            isG5 = False
+                        else:
+                            isG5 = True
+
+                elif iter == ModesG5.Gamma_3:
+                    if isG5:
+                        count_G5 += 1
+                        # Генерирование первой заявки по 1-ому потоку
+                        p = numpy.random.uniform(0, 1 - consts.EPSILON)
+                        lambda_b = self.lamb[0] / \
+                            (1 + self.r[0]/(1 - self.g[0]))
+                        delta = -math.log(1-p)/lambda_b
+
+                        if delta < min_G5 and delta != 0:
+                            min_G5 = delta
+                        if delta > max_G5:
+                            max_G5 = delta
+
+                        flows[0].add_cars(
+                            delta + start_time + mods[iter].get_time())
+                        all_time_g5 += delta
+
+                        flows[1].generation_cars(
+                            mods[iter].get_time() + delta, start_time)
+                    else:
+                        flows[1].generation_cars(
+                            mods[iter].get_time(), start_time)
+
+                elif iter == ModesG5.Gamma_4:
+                    if isG5 or isGenPi1Default:
+                        flows[0].generation_cars(time_Gamma_4, start_time)
+                        isG5 = False
+                        isGenPi1Default = False
+                    flows[1].generation_cars(time_for_pi2, start_time)
+
+                for i in range(count_flow):
+                    if flows[i].queue() >= MAX_queue:
+                        return [-1 for _ in range(6 * len(flows))]
+
+                if iter == ModesG5.Gamma_3 and isG5:
+                    start_time = mods[iter].service(
+                        current_flow, start_time, delta)
+                else:
+                    start_time = mods[iter].service(current_flow, start_time)
+
+                iter = (iter + 1) % (len(mods))
+
+            for flow in flows:
+                next.append(flow.get_gamma())
+                next.append(flow.get_dispersion())
+
+            debug_log("Count cars:", count_cars)
+            debug_log(prev)
+            debug_log(next)
+
+            if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
+                finish = True
+            else:
+                prev = next.copy()
+                next.clear()
+
+        # print(
+        #     f"Отношение числа срабатывания режима Г5 к числу всех циклов {count_G5} / {count_cycle}")
+        # print(
+        #     f"Число обслужанных машин по потокам {flows[0].count} / {flows[1].count}")
+
+        # отношение числа срабатывания режима Г5 к числу всех циклов
+        next.append(count_G5 / count_cycle)
+
+        # среднее время пребывания в режиме Г5
+        next.append(all_time_g5 / count_G5 if count_G5 != 0 else 0)
+
+        # среднее время простоя режима G5
+        next.append(mods[ModesG5.Gamma_3].down_time /
+                    count_G5 if count_G5 != 0 else 0)
+
+        # минимальное время пребывания в режиме Г5
+        next.append(min_G5 if min_G5 != 10000 else 0)
+
+        # максимальное время пребывания в режиме Г5
+        next.append(max_G5)
+
+        return next
+
+    def Start_Seq(self, count_serviced_cars: int, type_flow: TypeFlow) -> list:
+        time_Gamma_1 = self.time_service[0][0]
+        time_Gamma_2 = self.time_service[1][0]
+        time_Gamma_3 = self.time_service[2][0]
+        time_Gamma_4 = self.time_service[3][0]
         count_flow = len(self.lamb)
         flows = []
         for i in range(count_flow):
-            flows.append(Flow())
+            flows.append(Flow(self.lamb[i], self.r[i], self.g[i]))
 
         mods = []
         for i in range(len(self.time_service)):
             if len(self.time_service[i]) == 2:
                 mods.append(ModeServiceDevice(
-                    self.time_service[i][0], self.time_service[i][1], Type.DETECTOR_MODE if self.time_service[i][0] == 0 else Type.DEFAULT_MODE))
+                    self.time_service[i][0], self.time_service[i][1], Type.DETECTOR_MODE if self.time_service[i][0] == 0 else Type.SERVICE_MODE))
             if len(self.time_service[i]) == 1:
                 mods.append(ModeChange(self.time_service[i][0]))
-        iter = 1  # Начинаем работу с режима Г(2)
+        time_for_pi1 = time_Gamma_2 + time_Gamma_3 + time_Gamma_4
+        time_for_pi2 = time_Gamma_1 + time_Gamma_2 + time_Gamma_4
+
+        count_cars = count_serviced_cars
+
+        max_q = [0, 0]
+        iter = ModesSeq.Gamma_2
         start_time = 0
-        current_flow = None
+        current_flow = flows[1]
+        current_flow.generation_cars(time_for_pi2, start_time)
+        start_time = time_for_pi2
+        prev = []
+        while flows[0].count <= count_cars or flows[1].count <= count_cars:
 
-        time_pi2 = self.time_service[0][0] + \
-            self.time_service[1][0] + self.time_service[3][0]
-        time_pi1 = self.time_service[1][0] + \
-            self.time_service[2][0] + self.time_service[3][0]
+            current_flow = flows[0] if iter == ModesSeq.Gamma_1 else flows[1]
 
-        temp = CarFlow(self.lamb[1], self.time_service[1][0],
-                       self.r[1], self.g[1])
-        flows[1].add_cars(temp.create_flow(mode=True), temp.get_time())
-        isQueue = False
-        while flows[0].count <= count_serviced_cars or flows[1].count <= count_serviced_cars:
-            # while start_time <= time:
-            debug_log("Г (", iter + 1, ")", sep="")
-            debug_log(flows[0].cars, "\n", flows[1].cars)
-            debug_log("Время до обслуживания: ", start_time, "\n")
-
-            current_flow = flows[0] if iter == 0 else flows[1]
-
-            if iter == 1:
-                temp = CarFlow(self.lamb[0], time_pi1,
-                               self.r[0], self.g[0])
-                flows[0].add_cars(temp.create_flow(mode=True), temp.get_time())
-                if flows[0].get_queue(start_time) >= MAX_QUEUE:
-                    isQueue = True
-            elif iter == 3:
-                temp = CarFlow(self.lamb[1], time_pi2,
-                               self.r[1], self.g[1])
-                flows[1].add_cars(temp.create_flow(mode=True), temp.get_time())
-                if flows[1].get_queue(start_time) >= MAX_QUEUE:
-                    isQueue = True
+            if iter == ModesSeq.Gamma_1 or iter == ModesSeq.Gamma_3:
+                current_flow.generation_cars(
+                    mods[iter].get_time(), start_time)
+            elif iter == ModesSeq.Gamma_2:
+                flows[0].generation_cars(time_for_pi1, start_time)
+            elif iter == ModesSeq.Gamma_4:
+                flows[1].generation_cars(time_for_pi2, start_time)
 
             start_time = mods[iter].service(current_flow, start_time)
 
             iter = (iter + 1) % (len(mods))
-            if isQueue:
-                return [-1 for i in range(2 * len(flows))]
 
-        result = []
+            for i in range(count_flow):
+                if flows[i].queue() >= max_q[i]:
+                    max_q[i] = flows[i].queue()
+
+            for i in range(count_flow):
+                if flows[i].queue() >= max_q[i]:
+                    max_q[i] = flows[i].queue()
+                if flows[i].queue() >= MAX_queue:
+                    return [-1 for _ in range(2 * len(flows))]
+
         for flow in flows:
-            result.append(flow.get_gamma())
-            result.append(flow.get_dispersion())
-        return result
+            prev.append(flow.get_gamma())
+            prev.append(flow.get_dispersion())
+
+        finish = False
+        next = []
+        if type_flow == TypeFlow.BARTLETT:
+            count_serviced_cars *= 2
+        while(not finish):
+
+            count_cars += count_serviced_cars
+
+            while flows[0].count <= count_cars or flows[1].count <= count_cars:
+
+                current_flow = flows[0] if iter == ModesSeq.Gamma_1 else flows[1]
+
+                if iter == ModesSeq.Gamma_1 or iter == ModesSeq.Gamma_3:
+                    current_flow.generation_cars(
+                        mods[iter].get_time(), start_time)
+                elif iter == ModesSeq.Gamma_2:
+                    flows[0].generation_cars(time_for_pi1, start_time)
+                elif iter == ModesSeq.Gamma_4:
+                    flows[1].generation_cars(time_for_pi2, start_time)
+
+                start_time = mods[iter].service(current_flow, start_time)
+
+                iter = (iter + 1) % (len(mods))
+
+                for i in range(count_flow):
+                    if flows[i].queue() >= max_q[i]:
+                        max_q[i] = flows[i].queue()
+
+                for i in range(count_flow):
+                    if flows[i].queue() >= max_q[i]:
+                        max_q[i] = flows[i].queue()
+                    if flows[i].queue() >= MAX_queue:
+                        return [-1 for _ in range(2 * len(flows))]
+
+            for flow in flows:
+                next.append(flow.get_gamma())
+                next.append(flow.get_dispersion())
+
+            debug_log("Count cars:", count_cars)
+            debug_log(prev)
+            debug_log(next)
+
+            if abs(next[0] - prev[0]) <= EPSILON_TIME and abs(next[2] - prev[2]) <= EPSILON_TIME and abs(next[1] - prev[1]) <= 0.1 * prev[1] and abs(next[3] - prev[3]) <= 0.1 * prev[3]:
+                finish = True
+            else:
+                prev = next.copy()
+                next.clear()
+
+        return next
 
     def get_weight_avg_gamma(self, gammas: list):
         numerator = 0

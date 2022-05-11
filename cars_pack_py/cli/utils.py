@@ -6,20 +6,13 @@ import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
+from ..backend import consts
 
-EPSILON_TIME = 1
-EPSILON_DISPERSION = 1
+from .type_crossroads import TypeCrossroads
+from .type_flow import TypeFlow
+from ..backend.utils import debug_log
 
-DEBUG = True
-
-
-def debug_log(*args, **kwargs):
-    pass
-
-
-if DEBUG:
-    def debug_log(*args, **kwargs):
-        print(*args, **kwargs)
+SEED_TURN = False
 
 
 def averageLengthPack(car_flow: list) -> float:
@@ -36,70 +29,6 @@ def expected_value(r: list, g: list) -> list:
     return result
 
 
-def thread_function(thread_id: int):
-    asfile = open(
-        f"cars_pack_py//results//test_{thread_id}.csv", "w", encoding='utf-8')
-
-    fieldnames = ['#', 'count cars', 'lamb1', 'lamb2', 'r1', 'r2', 'g1', 'g2',
-                  'gamma1', 'gamma2', "average length pack 1:", "average length pack 2:"]
-    writer = csv.DictWriter(asfile, fieldnames=fieldnames)
-    writer.writeheader()
-
-    lamb = [0.1 * (thread_id + 1), 0.1]
-    time = 100
-    r = [0.1, 0.1]
-    g = [0.1, 0.1]
-    time_service = [[60, 0.5], [3], [60, 0.5], [0, 0.5], [3]]
-
-    f = True
-    count_cars = 5000
-    sd = ServiceDevice()
-    l = thread_id * (9 ** 5) + 1
-    for _ in range(9):
-        for _ in range(9):
-            for _ in range(9):
-                for _ in range(9):
-                    for _ in range(9):
-                        prev = sd.Start(
-                            lamb, time, r, g, time_service, count_cars)
-                        b = count_cars
-                        while f:
-                            b += count_cars
-                            a = sd.Start(lamb, time, r, g,
-                                         time_service, b)
-                            if abs(a[0] - prev[0]) <= 1 and abs(a[1] - prev[1]) <= 1:
-                                avglengt = expected_value(r, g)
-                                writer.writerow({'#': l, 'count cars': b, 'lamb1': lamb[0], 'r1': r[0], 'g1': g[0],
-                                                 'gamma1': a[0], "average length pack 1:": avglengt[0], 'lamb2': lamb[1], 'r2': r[1], 'g2': g[1], 'gamma2': a[1], "average length pack 2:": avglengt[1]})
-                                f = False
-                            prev = a
-                        f = True
-                        print(l)
-                        l += 1
-                        g[1] += 0.1
-                    g[1] = 0.1
-                    g[0] += 0.1
-                g[1] = 0.1
-                g[0] = 0.1
-                r[1] += 0.1
-            g[1] = 0.1
-            g[0] = 0.1
-            r[1] = 0.1
-            r[0] += 0.1
-        g[1] = 0.1
-        g[0] = 0.1
-        r[1] = 0.1
-        r[0] = 0.1
-        lamb[1] += 0.1
-    asfile.close()
-
-
-def Test():
-
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        executor.map(thread_function, range(9))
-
-
 def combine_csv():
     os.chdir("cars_pack_py//results//")
 
@@ -110,10 +39,58 @@ def combine_csv():
     combined_csv.to_csv("test.csv",
                         index=False, encoding='utf-8')
 
-# time_service = [[20, 1], [3], [20, 1], [0, 1], [3]]
+
+def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray:
+    tabl = np.full((int((max_value[0] - t1) / step) + 2, int((
+        max_value[1] - t3) / step) + 2), -1.0, dtype=np.float64)
+    for i in range(tabl.shape[0] - 1):
+        tabl[tabl.shape[0] - 2 - i][0] = t1 + i * step
+    for i in range(tabl.shape[1] - 1):
+        tabl[tabl.shape[0] - 1][i + 1] = t3 + i * step
+    return tabl
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = '', opt_value: bool = False):
+    name_file = ""
+    name_grid = ""
+    type_crossroads = TypeCrossroads.LOOP
+    type_flow = TypeFlow.PUASSON
+    if len(time_service) == 5:
+        type_crossroads = TypeCrossroads.G5
+
+    t1 = time_service[0][0]
+    t3 = time_service[2][0]
+
+    if t1 > max_value[0] or t3 > max_value[1]:
+        print("Введеные неверные максимальные значения")
+        return
+
+    if opt_value:
+        if type_crossroads == TypeCrossroads.LOOP:
+            path += "//Loop"
+            if not os.path.isdir(path):
+                os.mkdir(path)
+            name_grid = "Loop"
+        elif type_crossroads == TypeCrossroads.G5:
+            path += "//G5"
+            if not os.path.isdir(path):
+                os.mkdir(path)
+            name_grid = "G5"
+
+        if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
+            path += "//Puasson"
+            if not os.path.isdir(path):
+                os.mkdir(path)
+            name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        else:
+            type_flow = TypeFlow.BARTLETT
+            path += f"//Bartlett"
+            if not os.path.isdir(path):
+                os.mkdir(path)
+            path += f"//{r[0]:.{2}}_{g[0]:.{2}} {r[1]:.{2}}_{g[1]:.{2}}"
+            if not os.path.isdir(path):
+                os.mkdir(path)
+            name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -126,68 +103,170 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         print("Некоректное значение K")
         return
 
-    final = True
+    tabl_opt = create_table(t1, t3, max_value, step)
+    if type_crossroads == TypeCrossroads.G5:
+        tabl_frequency_cycle = create_table(t1, t3, max_value, step)
+        average_time_G5 = create_table(t1, t3, max_value, step)
+        tabl_down_time = create_table(t1, t3, max_value, step)
+        tabl_min_G5 = create_table(t1, t3, max_value, step)
+        tabl_max_G5 = create_table(t1, t3, max_value, step)
 
-    t1 = time_service[0][0]
-    t3 = time_service[2][0]
-
-    tabl = np.zeros((int((K - sum) / step) + 2, int(
-        (K - sum) / step) + 2))
-
-    for i in range(tabl.shape[0] - 1):
-        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i * step
-        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i * step
-
-    debug_log(tabl.shape)
+    debug_log(f"({tabl_opt.shape[0] - 2}, {tabl_opt.shape[1] - 2})")
 
     result = np.zeros(len(lamb))
 
-    index_i = tabl.shape[0] - 2
+    index_i = tabl_opt.shape[0] - 2
     index_j = 1
-    tabl[index_i + 1, index_j - 1] = 0
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K:
-        while time_service[0][0] + time_service[2][0] + orientation <= K:
+    opt_avg = 100000
+    opt_t1 = 0
+    opt_t3 = 0
+    frequence_opt = 0
+    average_G5 = 0
+    down_G5 = 0
+    min_G5 = 0
+    max_G5 = 0
+
+    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
+        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
-            b = count_serviced_cars
+            if SEED_TURN:
+                np.random.seed(consts.SEED)
             sd = ServiceDevice(lamb, r, g, time_service)
-            prev = sd.Start_Seq(b)
-            over_queue = False
-            while final:
-                result = sd.Start_Seq(b)
-                debug_log("Count cars:", b)
-                debug_log(prev)
-                debug_log(result)
-                if result[0] == -1 or result[2] == -1:
-                    tabl[index_i, index_j] = -1
-                    over_queue = True
-                    break
-                if abs(result[0] - prev[0]) <= EPSILON_TIME and abs(result[2] - prev[2]) <= EPSILON_TIME and abs(result[1] - prev[1]) <= 0.1 * prev[1] and abs(result[3] - prev[3]) <= 0.1 * prev[3]:
-                    avg = sd.get_weight_avg_gamma([result[0], result[2]])
-                    debug_log("Y:", avg, "\n")
-                    tabl[index_i, index_j] = avg
-                    final = False
-                b += count_serviced_cars
-                prev = result
-            if over_queue:
-                over_queue = False
-                break
+
+            if type_crossroads == TypeCrossroads.LOOP:
+                result = sd.Start_Seq(count_serviced_cars, type_flow)
+                avg = sd.get_weight_avg_gamma([result[0], result[2]])
+                debug_log("Y:", avg)
+                if avg < opt_avg and avg != -1:
+                    opt_avg = avg
+                    opt_t1 = time_service[0][0]
+                    opt_t3 = time_service[2][0]
+                tabl_opt[index_i, index_j] = avg
+
+            elif type_crossroads == TypeCrossroads.G5:
+                result = sd.Start_G5(count_serviced_cars, type_flow)
+                avg = sd.get_weight_avg_gamma([result[0], result[2]])
+                debug_log("Y:", avg)
+                if avg < opt_avg and avg != -1:
+                    opt_avg = avg
+                    opt_t1 = time_service[0][0]
+                    opt_t3 = time_service[2][0]
+                    frequence_opt = result[4]
+                    average_G5 = result[5]
+                    down_G5 = result[6]
+                    min_G5 = result[7]
+                    max_G5 = result[8]
+                tabl_opt[index_i, index_j] = avg
+                tabl_frequency_cycle[index_i, index_j] = result[4]
+                average_time_G5[index_i, index_j] = result[5]
+                tabl_down_time[index_i, index_j] = result[6]
+                tabl_min_G5[index_i, index_j] = result[7]
+                tabl_max_G5[index_i, index_j] = result[8]
+            debug_log("")
+            if SEED_TURN:
+                np.random.seed(0)
             time_service[0][0] += step
             index_i -= 1
-            final = True
         time_service[0][0] = t1
-        index_i = tabl.shape[0] - 2
+        index_i = tabl_opt.shape[0] - 2
         index_j += 1
         time_service[2][0] += step
 
     time_service[2][0] = t3
 
-    pd.DataFrame(tabl).to_csv(
-        f"{path}//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
+    if not opt_value:
+        shift = 5
+        opt_time_service = time_service.copy()
+        opt_time_service[0][0] = opt_t1 - shift if opt_t1 - shift >= 2 else 2
+        opt_time_service[2][0] = opt_t3 - shift if opt_t3 - shift >= 2 else 2
+        new_max_value = [opt_t1 + shift, opt_t3 + shift]
+        get_grid(lamb, r, g, opt_time_service,
+                 count_serviced_cars, K, new_max_value, 1, path, True)
+        return
+
+    print("Opt value =", opt_avg, "; T1 =", opt_t1, "; T3 =", opt_t3)
+    if type_crossroads == TypeCrossroads.G5:
+        print(
+            f"Frequency = {frequence_opt}; Average = {average_G5}; Down = {down_G5}; Min = {min_G5}; Max = {max_G5}")
+
+    pd.DataFrame(tabl_opt).to_csv(
+        f"{path}//{name_file}.csv", index=False)
+    df = pd.read_csv(f"{path}//{name_file}.csv", sep=',', dtype=np.float64)
+    df = df.replace(to_replace=-1, value='', regex=True)
+    pd.DataFrame(df).to_csv(
+        f"{path}//{name_file}.csv", index=False)
+
+    if type_crossroads == TypeCrossroads.G5:
+
+        pd.DataFrame(tabl_frequency_cycle).to_csv(
+            f"{path}//{name_file}_frequency_cycle.csv", index=False)
+        df = pd.read_csv(
+            f"{path}//{name_file}_frequency_cycle.csv", sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='', regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_frequency_cycle.csv", index=False)
+
+        pd.DataFrame(average_time_G5).to_csv(
+            f"{path}//{name_file}_average_time_G5.csv", index=False)
+        df = pd.read_csv(
+            f"{path}//{name_file}_average_time_G5.csv", sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='', regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_average_time_G5.csv", index=False)
+
+        pd.DataFrame(tabl_down_time).to_csv(
+            f"{path}//{name_file}_down_time.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}_down_time.csv",
+                         sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='',
+                        regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_down_time.csv", index=False)
+
+        pd.DataFrame(tabl_min_G5).to_csv(
+            f"{path}//{name_file}_min_G5.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}_min_G5.csv",
+                         sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='',
+                        regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_min_G5.csv", index=False)
+
+        pd.DataFrame(tabl_max_G5).to_csv(
+            f"{path}//{name_file}_max_G5.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}_max_G5.csv",
+                         sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='',
+                        regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}_max_G5.csv", index=False)
 
 
-def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
+def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+    name_file = ""
+    name_grid = ""
+    type_crossroads = TypeCrossroads.LOOP
+    if len(time_service) == 5:
+        type_crossroads = TypeCrossroads.G5
+
+    t1 = time_service[0][0]
+    t3 = time_service[2][0]
+
+    if type_crossroads == TypeCrossroads.LOOP:
+        path += "//Loop"
+        name_grid = "Loop"
+    elif type_crossroads == TypeCrossroads.G5:
+        path += "//G5"
+        name_grid = "G5"
+
+    if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
+        path += "//Puasson//State"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+    else:
+        path += "//Bartlett//State"
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{r[0]:.{2}}_{g[0]:.{2}}_{lamb[1]:.{2}}_{r[1]:.{2}}_{g[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -200,32 +279,21 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
         print("Некоректное значение K")
         return
 
-    t1 = time_service[0][0]
-    t3 = time_service[2][0]
-
-    tabl = np.zeros((int((K - sum) / step) + 2, int(
-        (K - sum) / step) + 2))
-
-    for i in range(tabl.shape[0] - 1):
-        tabl[tabl.shape[0] - 2 - i][0] = time_service[0][0] + i * step
-        tabl[tabl.shape[0] - 1][i + 1] = time_service[2][0] + i * step
+    tabl = create_table(t1, t3, max_value, step)
 
     index_i = tabl.shape[0] - 2
     index_j = 1
-    tabl[index_i + 1, index_j - 1] = 0
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K:
-        while time_service[0][0] + time_service[2][0] + orientation <= K:
+    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
+        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
             pi1 = lamb[0]*(time_service[0][0] + time_service[1]
-                           [0] + time_service[2][0] + time_service[3][0]) - time_service[0][1]*time_service[0][0] <= 0
+                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[0][1] * time_service[0][0] <= 0
             pi2 = lamb[1]*(time_service[0][0] + time_service[1]
-                           [0] + time_service[2][0] + time_service[3][0]) - time_service[2][1]*time_service[2][0] <= 0
+                           [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[2][1] * time_service[2][0] <= 0
             res = pi1 and pi2
             tabl[index_i, index_j] = 1 if res else -1
             time_service[0][0] += step
             index_i -= 1
-            if res == 0:
-                break
         time_service[0][0] = t1
         index_i = tabl.shape[0] - 2
         index_j += 1
@@ -234,7 +302,11 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
     time_service[2][0] = t3
 
     pd.DataFrame(tabl).to_csv(
-        f"{path}//{name_grid}_{K}_{lamb[0]}_{lamb[1]}.csv", index=False)
+        f"{path}//{name_file}.csv", index=False)
+    df = pd.read_csv(f"{path}//{name_file}.csv", sep=',', dtype=np.float64)
+    df = df.replace(to_replace=-1, value='', regex=True)
+    pd.DataFrame(df).to_csv(
+        f"{path}//{name_file}.csv", index=False)
 
 
 def wrapper(thread_id: int):
@@ -248,7 +320,7 @@ def wrapper(thread_id: int):
         return
     while(lamb[0] <= 0.5):
         while(lamb[1] <= 0.5):
-            print("Progress: ", lamb[0], lamb[1])
+            print(f"Progress {lamb[0]:.{2}} {lamb[1]:.{2}}")
             get_grid(lamb, r, g, time_service, count_cars, K, 5,
                      "Loop", "cars_pack_py//results//Puasson//Loop")
             lamb[1] += 0.1
@@ -256,13 +328,13 @@ def wrapper(thread_id: int):
         lamb[0] += 0.1
 
 
-def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, step: int = 1, name_grid: str = '', path: str = ''):
-    while(lamb[0] <= 0.5):
+def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+    while(lamb[0] <= 0.4):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
-            get_grid(lamb, r, g, current_time,
-                     count_serviced_cars, K, step, name_grid, path)
-            print("Progress: ", lamb[0], lamb[1])
+            get_grid(lamb, r, g, time_service,
+                     count_serviced_cars, K, max_value, step, path)
+            print(f"Progress: {lamb[0]:.{2}} {lamb[1]:.{2}}")
             lamb[1] += 0.1
-        lamb[1] = 0.1
         lamb[0] += 0.1
+        lamb[1] = lamb[0]

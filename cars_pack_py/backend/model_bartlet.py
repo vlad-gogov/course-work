@@ -1,4 +1,4 @@
-import random
+import numpy
 
 from .model import Model
 from . import consts
@@ -28,17 +28,14 @@ class ModelBartlet(Model):
 
     def count_requests(self) -> int:
         count = 0
-        p = random.uniform(0, 1 - consts.EPSILON)
-        F = 1 - self.r
-        l = 0
-        temp_g = 1
+        p = numpy.random.uniform(0, 1 - consts.EPSILON)
         temp = self.r * (1 - self.g)
+        F = 1 - self.r
         while F <= p:
             count += 1
-            l = temp * temp_g
-            F += l
-            if abs(l) <= consts.EPSILON:
+            F += temp
+            temp *= self.g
+            if abs(temp) <= consts.EPSILON:
                 return count + 1
-            temp_g *= self.g
 
         return count
