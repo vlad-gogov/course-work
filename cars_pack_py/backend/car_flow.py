@@ -11,6 +11,7 @@ class CarFlow:
         self.time = time
         self.r = r
         self.g = g
+        self.last_slow_car = 0
 
     def _create_cars_slow(self) -> numpy.ndarray:
         all_count_requests = 0
@@ -38,7 +39,8 @@ class CarFlow:
         # Slow cars
         slow_cars = self._create_cars_slow()
         count_pack = len(slow_cars)
-
+        if count_pack != 0:
+            self.last_slow_car = slow_cars[-1]
         if self.r == 0 or count_pack == 0:
             return slow_cars
 

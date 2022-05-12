@@ -9,7 +9,7 @@ from .utils import debug_log
 import numpy
 import math
 
-MAX_queue = 1500
+MAX_queue = 1000
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -50,7 +50,7 @@ class ServiceDevice():
         min_G5 = 10000
         max_G5 = 0
         count_cycle = 0
-        all_time_g5 = 0
+        all_time_G5 = 0
 
         time_for_pi2 = time_Gamma_1 + time_Gamma_2 + time_Gamma_4
         time_for_pi1_default = time_Gamma_2 + time_Gamma_3
@@ -59,6 +59,8 @@ class ServiceDevice():
         current_flow = flows[1]
         flows[1].generation_cars(time_for_pi2, start_time)
         start_time = time_for_pi2
+
+        lambda_b = self.lamb[0] / (1 + self.r[0]/(1 - self.g[0]))
 
         count_cars = count_serviced_cars
         while flows[0].count <= count_cars or flows[1].count <= count_cars:
@@ -84,12 +86,18 @@ class ServiceDevice():
 
             elif iter == ModesG5.Gamma_3:
                 if isG5:
-                    count_G5 += 1
                     # Генерирование первой заявки по 1-ому потоку
-                    p = numpy.random.uniform(0, 1 - consts.EPSILON)
-                    lambda_b = self.lamb[0] / \
-                        (1 + self.r[0]/(1 - self.g[0]))
-                    delta = -math.log(1-p)/lambda_b
+                    while delta <= 0:
+                        # p = numpy.random.uniform(
+                        #     1 - numpy.exp((start_time + mods[iter].get_time() - flows[0].get_last_slow_cars()) * lambda_b), 1 - consts.EPSILON)
+                        p = numpy.random.uniform(0, 1 - consts.EPSILON)
+                        time_next_slow_car = -math.log(1-p)/lambda_b
+                        delta = time_next_slow_car + \
+                            flows[0].get_last_slow_cars() - start_time - \
+                            mods[iter].get_time()
+                        # print(delta)
+
+                    count_G5 += 1
 
                     if delta < min_G5 and delta != 0:
                         min_G5 = delta
@@ -97,8 +105,8 @@ class ServiceDevice():
                         max_G5 = delta
 
                     flows[0].add_cars(
-                        delta + start_time)
-                    all_time_g5 += delta
+                        flows[0].get_last_slow_cars() + time_next_slow_car)
+                    all_time_G5 += delta
 
                     flows[1].generation_cars(
                         mods[iter].get_time() + delta, start_time)
@@ -119,6 +127,7 @@ class ServiceDevice():
             if iter == ModesG5.Gamma_3 and isG5:
                 start_time = mods[iter].service(
                     current_flow, start_time, delta)
+                delta = 0
             else:
                 start_time = mods[iter].service(current_flow, start_time)
 
@@ -161,12 +170,18 @@ class ServiceDevice():
 
                 elif iter == ModesG5.Gamma_3:
                     if isG5:
-                        count_G5 += 1
                         # Генерирование первой заявки по 1-ому потоку
-                        p = numpy.random.uniform(0, 1 - consts.EPSILON)
-                        lambda_b = self.lamb[0] / \
-                            (1 + self.r[0]/(1 - self.g[0]))
-                        delta = -math.log(1-p)/lambda_b
+                        while delta <= 0:
+                            # p = numpy.random.uniform(
+                            #     1 - numpy.exp((start_time + mods[iter].get_time() - flows[0].get_last_slow_cars()) * lambda_b), 1 - consts.EPSILON)
+                            p = numpy.random.uniform(0, 1 - consts.EPSILON)
+                            time_next_slow_car = -math.log(1-p)/lambda_b
+
+                            delta = time_next_slow_car + \
+                                flows[0].get_last_slow_cars() - start_time - \
+                                mods[iter].get_time()
+
+                        count_G5 += 1
 
                         if delta < min_G5 and delta != 0:
                             min_G5 = delta
@@ -174,8 +189,8 @@ class ServiceDevice():
                             max_G5 = delta
 
                         flows[0].add_cars(
-                            delta + start_time + mods[iter].get_time())
-                        all_time_g5 += delta
+                            flows[0].get_last_slow_cars() + time_next_slow_car)
+                        all_time_G5 += delta
 
                         flows[1].generation_cars(
                             mods[iter].get_time() + delta, start_time)
@@ -197,6 +212,7 @@ class ServiceDevice():
                 if iter == ModesG5.Gamma_3 and isG5:
                     start_time = mods[iter].service(
                         current_flow, start_time, delta)
+                    delta = 0
                 else:
                     start_time = mods[iter].service(current_flow, start_time)
 
@@ -225,7 +241,7 @@ class ServiceDevice():
         next.append(count_G5 / count_cycle)
 
         # среднее время пребывания в режиме Г5
-        next.append(all_time_g5 / count_G5 if count_G5 != 0 else 0)
+        next.append(all_time_G5 / count_G5 if count_G5 != 0 else 0)
 
         # среднее время простоя режима G5
         next.append(mods[ModesG5.Gamma_3].down_time /

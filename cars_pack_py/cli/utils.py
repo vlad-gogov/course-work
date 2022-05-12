@@ -327,7 +327,7 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
-    while(lamb[0] <= 0.4):
+    while(lamb[0] <= 0.3):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
             get_grid(lamb, r, g, time_service,
