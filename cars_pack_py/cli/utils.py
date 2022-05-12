@@ -111,8 +111,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         tabl_min_G5 = create_table(t1, t3, max_value, step)
         tabl_max_G5 = create_table(t1, t3, max_value, step)
 
-    debug_log(f"({tabl_opt.shape[0] - 2}, {tabl_opt.shape[1] - 2})")
-
     result = np.zeros(len(lamb))
 
     index_i = tabl_opt.shape[0] - 2
