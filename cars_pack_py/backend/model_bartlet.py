@@ -1,5 +1,3 @@
-import numpy
-
 from .model import Model
 from . import consts
 

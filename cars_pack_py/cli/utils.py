@@ -184,10 +184,10 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                  count_serviced_cars, K, new_max_value, 1, path, True)
         return
 
-    print("Opt value =", opt_avg, "; T1 =", opt_t1, "; T3 =", opt_t3)
+    print(f"Opt value = {opt_avg}; T1 = {opt_t1} T3 = {opt_t3}")
     if type_crossroads == TypeCrossroads.G5:
         print(
-            f"Frequency = {frequence_opt}; Average = {average_G5}; Down = {down_G5}; Min = {min_G5}; Max = {max_G5}")
+            f"Frequency = {frequence_opt}; Average = {average_G5}; Down = {down_G5}; Max = {max_G5}")
 
     pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)
@@ -327,7 +327,7 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
-    while(lamb[0] <= 0.4):
+    while(lamb[0] <= 0.3):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
             get_grid(lamb, r, g, time_service,
