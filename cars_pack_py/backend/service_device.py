@@ -97,7 +97,7 @@ class ServiceDevice():
                         max_G5 = delta
 
                     flows[0].add_cars(
-                        delta + start_time)
+                        delta + start_time + mods[iter].get_time())
                     all_time_g5 += delta
 
                     flows[1].generation_cars(

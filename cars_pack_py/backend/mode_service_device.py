@@ -1,5 +1,3 @@
-from os import times_result
-
 from .flow import Flow
 from .mode_service import ModeService
 from .type_service import Type
@@ -56,5 +54,7 @@ class ModeServiceDevice(ModeService):
 
         if next_time - delta <= t <= next_time and delta != 0:
             self.down_time += next_time - t
+
+        self.max_count_service = int(self.time_work / self.time_service)
 
         return next_time
