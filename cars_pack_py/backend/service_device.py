@@ -9,7 +9,7 @@ from .utils import debug_log
 import numpy
 import math
 
-MAX_queue = 1500
+MAX_queue = 1000
 EPSILON_TIME = 1
 EPSILON_DISPERSION = 1
 
@@ -47,7 +47,6 @@ class ServiceDevice():
         isG5 = False
         isGenPi1Default = False
         count_G5 = 0
-        min_G5 = 10000
         max_G5 = 0
         count_cycle = 0
         all_time_g5 = 0
@@ -91,8 +90,6 @@ class ServiceDevice():
                         (1 + self.r[0]/(1 - self.g[0]))
                     delta = -math.log(1-p)/lambda_b
 
-                    if delta < min_G5 and delta != 0:
-                        min_G5 = delta
                     if delta > max_G5:
                         max_G5 = delta
 
@@ -168,8 +165,6 @@ class ServiceDevice():
                             (1 + self.r[0]/(1 - self.g[0]))
                         delta = -math.log(1-p)/lambda_b
 
-                        if delta < min_G5 and delta != 0:
-                            min_G5 = delta
                         if delta > max_G5:
                             max_G5 = delta
 
@@ -230,9 +225,6 @@ class ServiceDevice():
         # среднее время простоя режима G5
         next.append(mods[ModesG5.Gamma_3].down_time /
                     count_G5 if count_G5 != 0 else 0)
-
-        # минимальное время пребывания в режиме Г5
-        next.append(min_G5 if min_G5 != 10000 else 0)
 
         # максимальное время пребывания в режиме Г5
         next.append(max_G5)

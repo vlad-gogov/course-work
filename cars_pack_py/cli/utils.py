@@ -1,9 +1,7 @@
 import csv
 import os
-import glob
 import pandas as pd
 import numpy as np
-from concurrent.futures import ThreadPoolExecutor
 
 from ..backend.service_device import ServiceDevice
 from ..backend import consts
@@ -29,17 +27,6 @@ def expected_value(r: list, g: list) -> list:
     return result
 
 
-def combine_csv():
-    os.chdir("cars_pack_py//results//")
-
-    extension = 'csv'
-    all_filenames = [i for i in glob.glob('*.{}'.format(extension))]
-
-    combined_csv = pd.concat([pd.read_csv(f) for f in all_filenames])
-    combined_csv.to_csv("test.csv",
-                        index=False, encoding='utf-8')
-
-
 def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray:
     tabl = np.full((int((max_value[0] - t1) / step) + 2, int((
         max_value[1] - t3) / step) + 2), -1.0, dtype=np.float64)
@@ -51,6 +38,8 @@ def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray
 
 
 def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = '', opt_value: bool = False):
+    if not os.path.isdir(path):
+        os.mkdir(path)
     name_file = ""
     name_grid = ""
     type_crossroads = TypeCrossroads.LOOP
@@ -65,32 +54,33 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         print("Введеные неверные максимальные значения")
         return
 
-    if opt_value:
-        if type_crossroads == TypeCrossroads.LOOP:
-            path += "//Loop"
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            name_grid = "Loop"
-        elif type_crossroads == TypeCrossroads.G5:
-            path += "//G5"
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            name_grid = "G5"
+    temp_path = path
 
-        if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
-            path += "//Puasson"
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
-        else:
-            type_flow = TypeFlow.BARTLETT
-            path += f"//Bartlett"
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            path += f"//{r[0]:.{2}}_{g[0]:.{2}} {r[1]:.{2}}_{g[1]:.{2}}"
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+    if type_crossroads == TypeCrossroads.LOOP:
+        path += "//Loop"
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        name_grid = "Loop"
+    elif type_crossroads == TypeCrossroads.G5:
+        path += "//G5"
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        name_grid = "G5"
+
+    if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
+        path += "//Puasson"
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+    else:
+        type_flow = TypeFlow.BARTLETT
+        path += f"//Bartlett"
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        path += f"//{r[0]:.{2}}_{g[0]:.{2}} {r[1]:.{2}}_{g[1]:.{2}}"
+        if not os.path.isdir(path):
+            os.mkdir(path)
+        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -108,7 +98,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         tabl_frequency_cycle = create_table(t1, t3, max_value, step)
         average_time_G5 = create_table(t1, t3, max_value, step)
         tabl_down_time = create_table(t1, t3, max_value, step)
-        tabl_min_G5 = create_table(t1, t3, max_value, step)
         tabl_max_G5 = create_table(t1, t3, max_value, step)
 
     result = np.zeros(len(lamb))
@@ -122,7 +111,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     frequence_opt = 0
     average_G5 = 0
     down_G5 = 0
-    min_G5 = 0
     max_G5 = 0
 
     while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
@@ -154,14 +142,12 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                     frequence_opt = result[4]
                     average_G5 = result[5]
                     down_G5 = result[6]
-                    min_G5 = result[7]
-                    max_G5 = result[8]
+                    max_G5 = result[7]
                 tabl_opt[index_i, index_j] = avg
                 tabl_frequency_cycle[index_i, index_j] = result[4]
                 average_time_G5[index_i, index_j] = result[5]
                 tabl_down_time[index_i, index_j] = result[6]
-                tabl_min_G5[index_i, index_j] = result[7]
-                tabl_max_G5[index_i, index_j] = result[8]
+                tabl_max_G5[index_i, index_j] = result[7]
             debug_log("")
             if SEED_TURN:
                 np.random.seed(0)
@@ -175,13 +161,19 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     time_service[2][0] = t3
 
     if not opt_value:
+        pd.DataFrame(tabl_opt).to_csv(
+            f"{path}//{name_file}.csv", index=False)
+        df = pd.read_csv(f"{path}//{name_file}.csv", sep=',', dtype=np.float64)
+        df = df.replace(to_replace=-1, value='', regex=True)
+        pd.DataFrame(df).to_csv(
+            f"{path}//{name_file}.csv", index=False)
         shift = 5
         opt_time_service = time_service.copy()
         opt_time_service[0][0] = opt_t1 - shift if opt_t1 - shift >= 2 else 2
         opt_time_service[2][0] = opt_t3 - shift if opt_t3 - shift >= 2 else 2
         new_max_value = [opt_t1 + shift, opt_t3 + shift]
         get_grid(lamb, r, g, opt_time_service,
-                 count_serviced_cars, K, new_max_value, 1, path, True)
+                 count_serviced_cars, K, new_max_value, 1, temp_path, True)
         return
 
     print(f"Opt value = {opt_avg}; T1 = {opt_t1} T3 = {opt_t3}")
@@ -222,15 +214,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                         regex=True)
         pd.DataFrame(df).to_csv(
             f"{path}//{name_file}_down_time.csv", index=False)
-
-        pd.DataFrame(tabl_min_G5).to_csv(
-            f"{path}//{name_file}_min_G5.csv", index=False)
-        df = pd.read_csv(f"{path}//{name_file}_min_G5.csv",
-                         sep=',', dtype=np.float64)
-        df = df.replace(to_replace=-1, value='',
-                        regex=True)
-        pd.DataFrame(df).to_csv(
-            f"{path}//{name_file}_min_G5.csv", index=False)
 
         pd.DataFrame(tabl_max_G5).to_csv(
             f"{path}//{name_file}_max_G5.csv", index=False)
@@ -327,7 +310,7 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
-    while(lamb[0] <= 0.3):
+    while(lamb[0] <= 0.4):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
             get_grid(lamb, r, g, time_service,
