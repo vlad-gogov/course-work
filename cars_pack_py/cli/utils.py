@@ -1,14 +1,15 @@
-import csv
 import os
 import pandas as pd
 import numpy as np
 
-from ..backend.service_device import ServiceDevice
+from progress.bar import IncrementalBar
+
 from ..backend import consts
+from ..backend.service_device import ServiceDevice
+from ..backend.utils import debug_log
 
 from .type_crossroads import TypeCrossroads
 from .type_flow import TypeFlow
-from ..backend.utils import debug_log
 
 SEED_TURN = False
 
@@ -310,12 +311,12 @@ def wrapper(thread_id: int):
 
 
 def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
-    while(lamb[0] <= 0.4):
+    while(lamb[0] <= 0.3):
         while(lamb[1] <= 0.5):
             current_time = time_service.copy()
             get_grid(lamb, r, g, time_service,
                      count_serviced_cars, K, max_value, step, path)
             print(f"Progress: {lamb[0]:.{2}} {lamb[1]:.{2}}")
             lamb[1] += 0.1
-        lamb[0] += 0.1
+        lamb[0] = round(lamb[0] + 0.1, 2)
         lamb[1] = lamb[0]
