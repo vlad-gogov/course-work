@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+import copy
 
 from progress.bar import IncrementalBar
 
@@ -38,7 +39,7 @@ def create_table(t1: float, t3: float, max_value: list, step: int) -> np.ndarray
     return tabl
 
 
-def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: list, step: int = 1, path: str = '', opt_value: bool = False):
+def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, max_value: list, step: int = 1, path: str = '', opt_value: bool = False, progress_bar: bool = True):
     if not os.path.isdir(path):
         os.mkdir(path)
     name_file = ""
@@ -72,7 +73,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         path += "//Puasson"
         if not os.path.isdir(path):
             os.mkdir(path)
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        name_file = f"{name_grid}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
     else:
         type_flow = TypeFlow.BARTLETT
         path += f"//Bartlett"
@@ -81,7 +82,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         path += f"//{r[0]:.{2}}_{g[0]:.{2}} {r[1]:.{2}}_{g[1]:.{2}}"
         if not os.path.isdir(path):
             os.mkdir(path)
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        name_file = f"{name_grid}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -89,10 +90,6 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         sum += t[0]
         if len(t) == 1:
             orientation += t[0]
-
-    if sum > K:
-        print("Некоректное значение K")
-        return
 
     tabl_opt = create_table(t1, t3, max_value, step)
     if type_crossroads == TypeCrossroads.G5:
@@ -114,8 +111,11 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
     down_G5 = 0
     max_G5 = 0
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
-        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
+    if progress_bar:
+        bar = IncrementalBar('Countdown', max = (tabl_opt.shape[0] - 1) * (tabl_opt.shape[1] - 1))
+
+    while time_service[2][0] <= max_value[1]:
+        while time_service[0][0] <= max_value[0]:
             debug_log("T1 =", time_service[0][0],
                       ", T3 =",  time_service[2][0])
             if SEED_TURN:
@@ -150,6 +150,8 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
                 tabl_down_time[index_i, index_j] = result[6]
                 tabl_max_G5[index_i, index_j] = result[7]
             debug_log("")
+            if progress_bar:
+                bar.next()
             if SEED_TURN:
                 np.random.seed(0)
             time_service[0][0] += step
@@ -160,6 +162,9 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         time_service[2][0] += step
 
     time_service[2][0] = t3
+    
+    if progress_bar:
+        bar.finish()
 
     if not opt_value:
         pd.DataFrame(tabl_opt).to_csv(
@@ -168,19 +173,25 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
         df = df.replace(to_replace=-1, value='', regex=True)
         pd.DataFrame(df).to_csv(
             f"{path}//{name_file}.csv", index=False)
-        shift = 5
+        shift = step
         opt_time_service = time_service.copy()
         opt_time_service[0][0] = opt_t1 - shift if opt_t1 - shift >= 2 else 2
         opt_time_service[2][0] = opt_t3 - shift if opt_t3 - shift >= 2 else 2
         new_max_value = [opt_t1 + shift, opt_t3 + shift]
         get_grid(lamb, r, g, opt_time_service,
-                 count_serviced_cars, K, new_max_value, 1, temp_path, True)
+                 count_serviced_cars, new_max_value, 1, temp_path, True)
         return
 
     print(f"Opt value = {opt_avg}; T1 = {opt_t1} T3 = {opt_t3}")
+    file = open(f"{name_grid} {r[0]:.{2}}_{g[0]:.{2}} {r[1]:.{2}}_{g[1]:.{2}}.txt", 'a+')
+    file.write(f"{lamb[0]:.{2}}_{lamb[1]:.{2}}\n")
+    file.write(f"Opt value = {opt_avg}; T1 = {opt_t1} T3 = {opt_t3}\n")
     if type_crossroads == TypeCrossroads.G5:
         print(
             f"Frequency = {frequence_opt}; Average = {average_G5}; Down = {down_G5}; Max = {max_G5}")
+        file.write(f"Frequency = {frequence_opt}; Average = {average_G5}; Down = {down_G5}; Max = {max_G5}\n")
+    file.write("\n")
+    file.close()
 
     pd.DataFrame(tabl_opt).to_csv(
         f"{path}//{name_file}.csv", index=False)
@@ -226,7 +237,7 @@ def get_grid(lamb: list, r: list, g: list, time_service: list, count_serviced_ca
             f"{path}//{name_file}_max_G5.csv", index=False)
 
 
-def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, max_value: int, step: int = 1, path: str = ''):
     name_file = ""
     name_grid = ""
     type_crossroads = TypeCrossroads.LOOP
@@ -245,10 +256,10 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
 
     if r[0] == 0 and r[1] == 0 and g[0] == 0 and g[1] == 0:
         path += "//Puasson//State"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        name_file = f"{name_grid}_{lamb[0]:.{2}}_{lamb[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
     else:
         path += "//Bartlett//State"
-        name_file = f"{name_grid}_{K}_{lamb[0]:.{2}}_{r[0]:.{2}}_{g[0]:.{2}}_{lamb[1]:.{2}}_{r[1]:.{2}}_{g[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
+        name_file = f"{name_grid}_{lamb[0]:.{2}}_{r[0]:.{2}}_{g[0]:.{2}}_{lamb[1]:.{2}}_{r[1]:.{2}}_{g[1]:.{2}}_{t1}-{max_value[0]}_{t3}-{max_value[1]}"
 
     sum = 0
     orientation = 0
@@ -257,17 +268,13 @@ def get_state(lamb: list, r: list, g: list, time_service: list, count_serviced_c
         if len(t) == 1:
             orientation += t[0]
 
-    if sum > K:
-        print("Некоректное значение K")
-        return
-
     tabl = create_table(t1, t3, max_value, step)
 
     index_i = tabl.shape[0] - 2
     index_j = 1
 
-    while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[2][0] <= max_value[1]:
-        while time_service[0][0] + time_service[2][0] + orientation <= K and time_service[0][0] <= max_value[0]:
+    while time_service[2][0] <= max_value[1]:
+        while time_service[0][0] <= max_value[0]:
             pi1 = lamb[0]*(time_service[0][0] + time_service[1]
                            [0] + time_service[2][0] + time_service[3][0]) - 1 / time_service[0][1] * time_service[0][0] <= 0
             pi2 = lamb[1]*(time_service[0][0] + time_service[1]
@@ -297,26 +304,25 @@ def wrapper(thread_id: int):
     g = [0.0, 0.0]
     time_service = [[5, 1], [3], [5, 1], [0, 1], [3]]
     count_cars = 5000
-    K = 80
     if (lamb[0] >= 0.6):
         return
-    while(lamb[0] <= 0.5):
+    while(lamb[0] <= 0.3):
         while(lamb[1] <= 0.5):
             print(f"Progress {lamb[0]:.{2}} {lamb[1]:.{2}}")
-            get_grid(lamb, r, g, time_service, count_cars, K, 5,
+            get_grid(lamb, r, g, time_service, count_cars, 5,
                      "Loop", "cars_pack_py//results//Puasson//Loop")
             lamb[1] += 0.1
         lamb[1] = 0.1
         lamb[0] += 0.1
 
 
-def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, K: int, max_value: int, step: int = 1, path: str = ''):
+def while_param(lamb: list, r: list, g: list, time_service: list, count_serviced_cars: int, max_value: int, step: int = 1, path: str = ''):
     while(lamb[0] <= 0.3):
         while(lamb[1] <= 0.5):
-            current_time = time_service.copy()
-            get_grid(lamb, r, g, time_service,
-                     count_serviced_cars, K, max_value, step, path)
             print(f"Progress: {lamb[0]:.{2}} {lamb[1]:.{2}}")
+            current_time = copy.deepcopy(time_service)
+            get_grid(lamb, r, g, current_time,
+                     count_serviced_cars, max_value, step, path, False)
             lamb[1] += 0.1
         lamb[0] = round(lamb[0] + 0.1, 2)
-        lamb[1] = lamb[0]
+        lamb[1] = round(lamb[0] + 0.1, 2)
